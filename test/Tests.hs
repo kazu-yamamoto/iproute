@@ -1,8 +1,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 ----------------------------------------------------------------
--- 
+--
 -- Tests for IP.RouteTable
--- 
+--
 --    runghc -i.. Tests.hs
 --
 
@@ -115,7 +115,7 @@ linear = linear' Nothing
     where
       linear' a _ [] = a
       linear' Nothing k (x:xs)
-          | x >:> k   = linear' (Just x) k xs 
+          | x >:> k   = linear' (Just x) k xs
           | otherwise = linear' Nothing  k xs
       linear' (Just a) k (x:xs)
           | x >:> k   = if mlen x > mlen a

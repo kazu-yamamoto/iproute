@@ -13,7 +13,7 @@ Description:            IP Routing Table is a tree of IP ranges
                         are supported.
 Category:               Algorithms
 Cabal-Version:          >= 1.2
-Build-Type:             Simple 
+Build-Type:             Simple
 Extra-Source-Files:     test/Tests.hs test/IPv4Search.hs test/Makefile
 library
   GHC-Options:          -Wall
