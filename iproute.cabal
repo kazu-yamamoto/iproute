@@ -1,7 +1,7 @@
 Name:                   iproute
-Version:                0.1
-Author:                 Kazu Yamamoto <kazu@Mew.org>
-Maintainer:             Kazu Yamamoto <kazu@Mew.org>
+Version:                0.1.1
+Author:                 Kazu Yamamoto <kazu@iij.ad.jp>
+Maintainer:             Kazu Yamamoto <kazu@iij.ad.jp>
 License:                BSD3
 License-File:           LICENSE
 Homepage:               http://www.mew.org/~kazu/proj/iproute/
@@ -12,7 +12,7 @@ Description:            IP Routing Table is a tree of IP ranges
                         way branching removed. Both IPv4 and IPv6
                         are supported.
 Category:               Algorithms
-Cabal-Version:          >= 1.2
+Cabal-Version:          >= 1.6
 Build-Type:             Simple
 Extra-Source-Files:     test/Tests.hs test/IPv4Search.hs test/Makefile
 library
@@ -20,7 +20,9 @@ library
   Exposed-Modules:      Data.IP
                         Data.IP.RouteTable
   Other-Modules:        Data.IP.RouteTable.Internal
-  Build-Depends:        base >= 2.0 && < 4,
-                        parsec >= 2.0,
-                        containers >= 0.2
+  Build-Depends:        base >= 4.0 && < 10,
+                        parsec, containers
+Source-Repository head
+  Type:                 git
+  Location:             git://github.com/kazu-yamamoto/iproute.git
 
