@@ -1,0 +1,26 @@
+Name:                   iproute
+Version:                0.1
+Author:                 Kazu Yamamoto <kazu@Mew.org>
+Maintainer:             Kazu Yamamoto <kazu@Mew.org>
+License:                BSD3
+License-File:           LICENSE
+Homepage:               http://www.mew.org/~kazu/proj/iproute/
+Synopsis:               IP Routing Table
+Description:            IP Routing Table is a tree of IP ranges
+                        to search one of them on the longest
+                        match base. It is a kind of TRIE with one
+                        way branching removed. Both IPv4 and IPv6
+                        are supported.
+Category:               Algorithms
+Cabal-Version:          >= 1.2
+Build-Type:             Simple 
+Extra-Source-Files:     test/Tests.hs test/IPv4Search.hs test/Makefile
+library
+  GHC-Options:          -Wall
+  Exposed-Modules:      Data.IP
+                        Data.IP.RouteTable
+  Other-Modules:        Data.IP.RouteTable.Internal
+  Build-Depends:        base >= 2.0 && < 4,
+                        parsec >= 2.0,
+                        containers >= 0.2
+
