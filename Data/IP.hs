@@ -3,10 +3,9 @@
   Data structures to express IPv4, IPv6 and IP range.
 -}
 module Data.IP (
-    IP(..)
-  , IPVersion
-  , IPv4, toIPv4
-  , IPv6, toIPv6
+    IP(masked, intToMask, intToTBit, isZero)
+  , IPv4, toIPv4, isIPv4
+  , IPv6, toIPv6, isIPv6
   , IPRange, addr, mask, mlen
   , (>:>), makeIPRange
   ) where
@@ -59,9 +58,6 @@ data IP a => IPRange a =
       , mlen :: Int
     } deriving (Eq, Ord)
 
-{-|
-  The IP version
--}
 data IPVersion = IPVersion4 | IPVersion6 deriving (Eq, Ord)
 
 ----------------------------------------------------------------
@@ -118,9 +114,6 @@ class Eq a => IP a where
       returns 'False'.
     -}
     isZero :: a -> a -> Bool
-    {-|
-      The 'version' function returns 'IPVersion'.
-    -}
     version :: a -> IPVersion
 
 instance IP IPv4 where
@@ -166,6 +159,14 @@ showIPv6 (IPv6 (a1,a2,a3,a4)) = show6 a1 ++ ":" ++ show6 a2 ++ ":" ++ show6 a3 +
       show6 q = let (r2,q2) = remQuo q
                     (r1, _) = remQuo q2
                 in printf "%02x:%02x" r1 r2
+
+----------------------------------------------------------------
+
+isIPv4 :: (IP a) => a -> Bool
+isIPv4 x = version x == IPVersion4
+
+isIPv6 :: (IP a) => a -> Bool
+isIPv6 x = version x == IPVersion6
 
 ----------------------------------------------------------------
 --
