@@ -3,7 +3,7 @@
   Data structures to express IPv4, IPv6 and IP range.
 -}
 module Data.IP (
-    IP(masked, intToMask, intToTBit, isZero)
+    IP(masked, intToMask, intToTBit, isZero, isMatchedTo)
   , IPv4, toIPv4, isIPv4
   , IPv6, toIPv6, isIPv6
   , IPRange, addr, mask, mlen
@@ -114,6 +114,7 @@ class Eq a => IP a where
       returns 'False'.
     -}
     isZero :: a -> a -> Bool
+    isMatchedTo :: a -> IPRange a -> Bool
     version :: a -> IPVersion
 
 instance IP IPv4 where
@@ -122,6 +123,7 @@ instance IP IPv4 where
     intToTBit = intToTBitIPv4
     isZero a b = a `masked` b == IPv4 0
     version _ = IPVersion4
+    isMatchedTo a r = a `masked` mask r == addr r
 
 instance IP IPv6 where
     IPv6 (a1,a2,a3,a4) `masked` IPv6 (m1,m2,m3,m4) =
@@ -130,6 +132,7 @@ instance IP IPv6 where
     intToTBit = intToTBitIPv6
     isZero a b = a `masked` b == IPv6 (0,0,0,0)
     version _ = IPVersion6
+    isMatchedTo a r = a `masked` mask r == addr r
 
 ----------------------------------------------------------------
 --
