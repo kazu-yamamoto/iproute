@@ -2,7 +2,14 @@
 {-|
   Data structures to express IPv4, IPv6 and IP range.
 -}
-module Data.IP (IP(..), IPv4, IPv6, toIPv4, toIPv6, IPRange, addr, mask, mlen, (>:>), makeIPRange) where
+module Data.IP (
+    IP(..)
+  , IPVersion
+  , IPv4, toIPv4
+  , IPv6, toIPv6
+  , IPRange, addr, mask, mlen
+  , (>:>), makeIPRange
+  ) where
 
 import Control.Monad
 import Data.Bits
@@ -42,7 +49,7 @@ newtype IPv6 = IPv6 IPv6Addr deriving (Eq, Ord)
 
   To create this, use 'makeIPRange' or 'read' \"192.0.2.0/24\" :: 'IPRange' 'IPv4', for example.
 -}
-data (IP a) => IPRange a =
+data IP a => IPRange a =
     IPRange {
         -- |The 'addr' function returns an 'IP' address from 'IPRange'.
         addr :: a
@@ -51,6 +58,11 @@ data (IP a) => IPRange a =
         -- |The 'mlen' function returns a mask length from 'IPRange'.
       , mlen :: Int
     } deriving (Eq, Ord)
+
+{-|
+  The IP version
+-}
+data IPVersion = IPVersion4 | IPVersion6 deriving (Eq, Ord)
 
 ----------------------------------------------------------------
 --
@@ -71,9 +83,10 @@ a >:> b = mlen a <= mlen b && (addr b `masked` mask a) == addr a
   the 'IP' address, then returns 'IPRange' made of them.
 -}
 makeIPRange :: IP a => a -> Int -> IPRange a
-makeIPRange ad len = let msk = intToMask len
-                         adr = ad `masked` msk
-                     in IPRange adr msk len
+makeIPRange ad len = IPRange adr msk len
+   where
+     msk = intToMask len
+     adr = ad `masked` msk
 
 ----------------------------------------------------------------
 --
@@ -105,12 +118,17 @@ class Eq a => IP a where
       returns 'False'.
     -}
     isZero :: a -> a -> Bool
+    {-|
+      The 'version' function returns 'IPVersion'.
+    -}
+    version :: a -> IPVersion
 
 instance IP IPv4 where
     IPv4 a `masked` IPv4 m = IPv4 (a .&. m)
     intToMask = maskIPv4
     intToTBit = intToTBitIPv4
     isZero a b = a `masked` b == IPv4 0
+    version _ = IPVersion4
 
 instance IP IPv6 where
     IPv6 (a1,a2,a3,a4) `masked` IPv6 (m1,m2,m3,m4) =
@@ -118,6 +136,7 @@ instance IP IPv6 where
     intToMask = maskIPv6
     intToTBit = intToTBitIPv6
     isZero a b = a `masked` b == IPv6 (0,0,0,0)
+    version _ = IPVersion6
 
 ----------------------------------------------------------------
 --

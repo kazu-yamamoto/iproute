@@ -1,5 +1,5 @@
 Name:                   iproute
-Version:                0.1.1
+Version:                0.2.0
 Author:                 Kazu Yamamoto <kazu@iij.ad.jp>
 Maintainer:             Kazu Yamamoto <kazu@iij.ad.jp>
 License:                BSD3
@@ -11,7 +11,7 @@ Description:            IP Routing Table is a tree of IP ranges
                         match base. It is a kind of TRIE with one
                         way branching removed. Both IPv4 and IPv6
                         are supported.
-Category:               Algorithms
+Category:               Algorithms Network
 Cabal-Version:          >= 1.6
 Build-Type:             Simple
 Extra-Source-Files:     test/Tests.hs test/IPv4Search.hs test/Makefile
