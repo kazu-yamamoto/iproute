@@ -2,17 +2,17 @@
   Data structures to express IPv4, IPv6 and IP range.
 -}
 module Data.IP (
-    IP (masked, intToMask, intToTBit, isZero)
+    IP (..)
   , IPv4, toIPv4
   , IPv6, toIPv6
-  , IPRange (addr, mask, mlen)
-  , makeIPRange, (>:>), isMatchedTo
+  , IPRange (..)
+  , AddrRange (addr, mask, mlen)
   , IPX (..)
-  , IPXRange (..)
-  , IPUnified (toIPX, toIPXRange)
+  , Routable (..)
+  , makeAddrRange, (>:>), isMatchedTo
   ) where
 
 import Data.IP.Addr
-import Data.IP.IP
-import Data.IP.IPX
 import Data.IP.Range
+import Data.IP.Routable
+import Data.IP.IPX

@@ -10,9 +10,12 @@ import Text.Parsec.String
 import Text.Printf
 
 ----------------------------------------------------------------
---
--- IP
---
+
+data IP = IPv4 { ipv4 :: IPv4 }
+        | IPv6 { ipv6 :: IPv6 }
+        deriving (Eq,Show)
+
+----------------------------------------------------------------
 
 -- This is host byte order
 type IPv4Addr = Word32
@@ -22,13 +25,13 @@ type IPv6Addr = (Word32,Word32,Word32,Word32)
   The abstract data structure to express an IPv4 address.
   To create this, use 'toIPv4'. Or use 'read' @\"192.0.2.1\"@ :: 'IPv4', for example.
 -}
-newtype IPv4 = IPv4 IPv4Addr deriving (Eq, Ord)
+newtype IPv4 = IP4 IPv4Addr deriving (Eq, Ord)
 
 {-|
   The abstract data structure to express an IPv6 address.
   To create this, use 'toIPv6'. Or use 'read' @\"2001:DB8::1\"@ :: 'IPv6', for example.
 -}
-newtype IPv6 = IPv6 IPv6Addr deriving (Eq, Ord)
+newtype IPv6 = IP6 IPv6Addr deriving (Eq, Ord)
 
 ----------------------------------------------------------------
 --
@@ -42,7 +45,7 @@ instance Show IPv6 where
     show = showIPv6
 
 showIPv4 :: IPv4 -> String
-showIPv4 (IPv4 a) = show4 a
+showIPv4 (IP4 a) = show4 a
     where
       remQuo x = (x `mod` 256, x `div` 256)
       show4 q = let (a4,q4) = remQuo q
@@ -52,13 +55,12 @@ showIPv4 (IPv4 a) = show4 a
                  in printf "%d.%d.%d.%d" a1 a2 a3 a4
 
 showIPv6 :: IPv6 -> String
-showIPv6 (IPv6 (a1,a2,a3,a4)) = show6 a1 ++ ":" ++ show6 a2 ++ ":" ++ show6 a3 ++ ":" ++ show6 a4
+showIPv6 (IP6 (a1,a2,a3,a4)) = show6 a1 ++ ":" ++ show6 a2 ++ ":" ++ show6 a3 ++ ":" ++ show6 a4
     where
       remQuo x = (x `mod` 65536, x `div` 65536)
       show6 q = let (r2,q2) = remQuo q
                     (r1, _) = remQuo q2
                 in printf "%02x:%02x" r1 r2
-
 
 ----------------------------------------------------------------
 --
@@ -70,7 +72,7 @@ showIPv6 (IPv6 (a1,a2,a3,a4)) = show6 a1 ++ ":" ++ show6 a2 ++ ":" ++ show6 a3 +
   For example, 'toIPv4' @[192,0,2,1]@.
 -}
 toIPv4 :: [Int] -> IPv4
-toIPv4 = IPv4 . toWord32
+toIPv4 = IP4 . toWord32
     where
       toWord32 [a1,a2,a3,a4] = fromIntegral $ shift a1 24 + shift a2 16 + shift a3 8 + a4
       toWord32 _             = error "toWord32"
@@ -81,7 +83,7 @@ toIPv4 = IPv4 . toWord32
 -}
 toIPv6 :: [Int] -> IPv6
 toIPv6 ad = let [x1,x2,x3,x4] = map toWord32 $ split2 ad
-            in IPv6 (x1,x2,x3,x4)
+            in IP6 (x1,x2,x3,x4)
     where
       split2 [] = []
       split2 x  = take 2 x : split2 (drop 2 x)
@@ -100,12 +102,12 @@ instance Read IPv6 where
     readsPrec _ = parseIPv6
 
 parseIPv4 :: String -> [(IPv4,String)]
-parseIPv4 cs = case parse (adopt ipv4) "parseIPv4" cs of
+parseIPv4 cs = case parse (adopt ip4) "parseIPv4" cs of
                  Right a4 -> a4
                  Left  _  -> error "parseIPv4"
 
 parseIPv6 :: String -> [(IPv6,String)]
-parseIPv6 cs = case parse (adopt ipv6) "parseIPv6" cs of
+parseIPv6 cs = case parse (adopt ip6) "parseIPv6" cs of
                  Right a6 -> a6
                  Left  _  -> error "parseIPv6"
 
@@ -127,8 +129,8 @@ dig = do { char '0'; return 0 } <|>
              ret = foldl' (\x y -> x * 10 + y) 0 ms
          return ret
 
-ipv4 :: Parser IPv4
-ipv4 = do
+ip4 :: Parser IPv4
+ip4 = do
     as <- dig `sepBy1` (char '.')
     check as
     return $ toIPv4 as
@@ -152,13 +154,13 @@ hex = do ns <- many1 hexDigit
     where
       check ns = when (length ns > 4) (unexpected "IPv6 address -- more than 4 hex")
 
-ipv6 :: Parser IPv6
-ipv6 = do
-    as <- ipv6'
+ip6 :: Parser IPv6
+ip6 = do
+    as <- ip6'
     return $ toIPv6 as
 
-ipv6' :: Parser [Int]
-ipv6' =     do colon2
+ip6' :: Parser [Int]
+ip6' =      do colon2
                bs <- option [] hexcolon
                rs <- format [] bs
                return rs

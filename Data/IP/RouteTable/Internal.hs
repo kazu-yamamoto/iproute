@@ -1,5 +1,5 @@
 {-|
-  IP routing table is a tree of 'IPRange'
+  IP routing table is a tree of 'AddrRange'
   to search one of them on the longest
   match base. It is a kind of TRIE with one
   way branching removed. Both IPv4 and IPv6
@@ -18,29 +18,29 @@ import Prelude hiding (lookup)
 -}
 data IPRTable k a = Nil | Node (Entry k a) (IPRTable k a) (IPRTable k a) deriving (Eq, Show)
 
-data (IP k) => Entry k a = Entry (IPRange k) k (Maybe a) deriving (Eq, Show)
+data (Routable k) => Entry k a = Entry (AddrRange k) k (Maybe a) deriving (Eq, Show)
 
 ----------------------------------------------------------------
 
 {-|
   The 'empty' function returns an empty IP routing table.
 -}
-empty :: IP k => IPRTable k a
+empty :: Routable k => IPRTable k a
 empty = Nil
 
 ----------------------------------------------------------------
 
-newEntry :: (IP k) => IPRange k -> Maybe a -> Entry k a
+newEntry :: (Routable k) => AddrRange k -> Maybe a -> Entry k a
 newEntry k v = Entry k (intToTBit (mlen k)) v
 
 {-|
-  The 'insert' function inserts a value with a key of 'IPRange' to 'IPRTable'
+  The 'insert' function inserts a value with a key of 'AddrRange' to 'IPRTable'
   and returns a new 'IPRTable'.
 -}
-insert :: (IP k) => IPRange k -> a -> IPRTable k a -> IPRTable k a
+insert :: (Routable k) => AddrRange k -> a -> IPRTable k a -> IPRTable k a
 insert k v s = inject (newEntry k (Just v)) s
 
-inject :: (IP k) => Entry k a -> IPRTable k a -> IPRTable k a
+inject :: (Routable k) => Entry k a -> IPRTable k a -> IPRTable k a
 inject e Nil    = Node e Nil Nil
 inject e1@(Entry k1 _ _) s@(Node e2@(Entry k2 _ _) l r)
     | k1 == k2  = Node e1 l r
@@ -53,7 +53,7 @@ inject e1@(Entry k1 _ _) s@(Node e2@(Entry k2 _ _) l r)
     | otherwise = let n = Node e1 Nil Nil
                   in glue n s
 
-glue :: IP k => IPRTable k a -> IPRTable k a -> IPRTable k a
+glue :: Routable k => IPRTable k a -> IPRTable k a -> IPRTable k a
 glue s1@(Node (Entry k1 _ _) _ _) s2@(Node (Entry k2 _ _) _ _) =
     let kg = makeGlueRange 0 k1 k2
         eg  = newEntry kg Nothing
@@ -62,27 +62,27 @@ glue s1@(Node (Entry k1 _ _) _ _) s2@(Node (Entry k2 _ _) _ _) =
        else Node eg s2 s1
 glue _ _ = error "glue"
 
-makeGlueRange :: (IP k) => Int -> IPRange k -> IPRange k -> IPRange k
+makeGlueRange :: (Routable k) => Int -> AddrRange k -> AddrRange k -> AddrRange k
 makeGlueRange n k1 k2
     | addr k1 `masked` mk == addr k2 `masked` mk = makeGlueRange (n + 1) k1 k2
 
-    | otherwise = makeIPRange (addr k1) (n - 1)
+    | otherwise = makeAddrRange (addr k1) (n - 1)
   where
     mk = intToMask n
 
-isLeft :: IP k => IPRange k -> Entry k a -> Bool
+isLeft :: Routable k => AddrRange k -> Entry k a -> Bool
 isLeft adr (Entry _ tb _) = isZero (addr adr) tb
 
 ----------------------------------------------------------------
 
 {-|
-  The 'lookup' function looks up 'IPRTable' with a key of 'IPRange'
+  The 'lookup' function looks up 'IPRTable' with a key of 'AddrRange'
   and returns its value if exists.
 -}
-lookup :: IP k => IPRange k -> IPRTable k a -> Maybe a
+lookup :: Routable k => AddrRange k -> IPRTable k a -> Maybe a
 lookup k s = search k s Nothing
 
-search :: IP k => IPRange k -> IPRTable k a -> Maybe a -> Maybe a
+search :: Routable k => AddrRange k -> IPRTable k a -> Maybe a -> Maybe a
 search _ Nil res = res
 search k1 (Node e2@(Entry k2 _ Nothing) l r) res
     | k1 == k2  = res
@@ -103,14 +103,14 @@ search k1 (Node e2@(Entry k2 _ vl) l r) res
   The 'fromList' function creates a new IP routing table from
   a list of a pair of 'IPrange' and value.
 -}
-fromList :: IP k => [(IPRange k, a)] -> IPRTable k a
+fromList :: Routable k => [(AddrRange k, a)] -> IPRTable k a
 fromList = foldl' (\s (k,v) -> insert k v s) empty
 
 {-|
-  The 'toList' function creates a list of a pair of 'IPrange' and
+  The 'toList' function creates a list of a pair of 'AddrRange' and
   value from an IP routing table.
 -}
-toList :: IP k => IPRTable k a -> [(IPRange k, a)]
+toList :: Routable k => IPRTable k a -> [(AddrRange k, a)]
 toList = foldt toL []
   where
     toL Nil xs = xs

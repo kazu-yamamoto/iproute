@@ -6,10 +6,10 @@ import Data.Word
 import Data.IntMap hiding (map)
 
 maskIPv4 :: Int -> IPv4
-maskIPv4 len = IPv4 (masksIPv4 ! len)
+maskIPv4 len = IP4 (masksIPv4 ! len)
 
 maskIPv6 :: Int -> IPv6
-maskIPv6 len = IPv6 (masksIPv6 ! len)
+maskIPv6 len = IP6 (masksIPv6 ! len)
 
 masksWord32 :: [Word32]
 masksWord32 = take 33 $ iterate (flip shift 1) 0xffffffff

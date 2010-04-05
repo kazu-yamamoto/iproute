@@ -20,10 +20,10 @@ library
   Exposed-Modules:      Data.IP
                         Data.IP.RouteTable
   Other-Modules:        Data.IP.Addr
-                        Data.IP.IP
-                        Data.IP.IPX
                         Data.IP.Mask
                         Data.IP.Range
+                        Data.IP.Routable
+                        Data.IP.IPX
                         Data.IP.RouteTable.Internal
   Build-Depends:        base == 4.2.*,
                         parsec >= 3, containers
