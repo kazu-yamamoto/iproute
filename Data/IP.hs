@@ -6,7 +6,7 @@ module Data.IP (
   , IPv4, toIPv4, isIPv4
   , IPv6, toIPv6, isIPv6
   , IPRange (addr, mask, mlen)
-  , (>:>), makeIPRange
+  , makeIPRange, (>:>), isMatchedTo
   , IPX (..)
   , IPXRange (..)
   , IPUnified (toIPX, toIPXRange)

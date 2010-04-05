@@ -44,6 +44,11 @@ data IP a => IPRange a =
 (>:>) :: IP a => IPRange a -> IPRange a -> Bool
 a >:> b = mlen a <= mlen b && (addr b `masked` mask a) == addr a
 
+{-|
+  The 'toMatchedTo' function take an 'IP' address and an 'IPRange',
+  and returns 'True' if the range contains the address.
+-}
+
 isMatchedTo :: IP a => a -> IPRange a -> Bool
 isMatchedTo a r = a `masked` mask r == addr r
 
