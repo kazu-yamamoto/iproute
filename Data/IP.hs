@@ -3,8 +3,8 @@
 -}
 module Data.IP (
     IP (masked, intToMask, intToTBit, isZero)
-  , IPv4, toIPv4, isIPv4
-  , IPv6, toIPv6, isIPv6
+  , IPv4, toIPv4
+  , IPv6, toIPv6
   , IPRange (addr, mask, mlen)
   , makeIPRange, (>:>), isMatchedTo
   , IPX (..)

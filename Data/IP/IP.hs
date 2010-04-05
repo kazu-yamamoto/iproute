@@ -36,14 +36,12 @@ class Eq a => IP a where
       returns 'False'.
     -}
     isZero :: a -> a -> Bool
-    version :: a -> IPVersion
 
 instance IP IPv4 where
     IPv4 a `masked` IPv4 m = IPv4 (a .&. m)
     intToMask = maskIPv4
     intToTBit = intToTBitIPv4
     isZero a b = a `masked` b == IPv4 0
-    version _ = IPVersion4
 
 instance IP IPv6 where
     IPv6 (a1,a2,a3,a4) `masked` IPv6 (m1,m2,m3,m4) =
@@ -51,20 +49,6 @@ instance IP IPv6 where
     intToMask = maskIPv6
     intToTBit = intToTBitIPv6
     isZero a b = a `masked` b == IPv6 (0,0,0,0)
-    version _ = IPVersion6
-
-----------------------------------------------------------------
---
--- Version
---
-
-data IPVersion = IPVersion4 | IPVersion6 deriving (Eq, Ord)
-
-isIPv4 :: (IP a) => a -> Bool
-isIPv4 x = version x == IPVersion4
-
-isIPv6 :: (IP a) => a -> Bool
-isIPv6 x = version x == IPVersion6
 
 ----------------------------------------------------------------
 --
