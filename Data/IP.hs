@@ -3,17 +3,17 @@
   Data structures to express IPv4, IPv6 and IP range.
 -}
 module Data.IP (
-    IP (masked, intToMask, intToTBit, isZero, isMatchedTo, toIPX)
+    IP (masked, intToMask, intToTBit, isZero, isMatchedTo, toIPX, toIPXRange)
   , IPv4, toIPv4, isIPv4
   , IPv6, toIPv6, isIPv6
-  , IPX (..)
   , IPRange, addr, mask, mlen
   , (>:>), makeIPRange
+  , IPX (..)
+  , IPXRange (..)
   ) where
 
 import Control.Monad
 import Data.Bits
-import Data.Char
 import Data.Char
 import Data.IntMap hiding (map)
 import Data.List (foldl')
@@ -115,8 +115,20 @@ class Eq a => IP a where
       returns 'False'.
     -}
     isZero :: a -> a -> Bool
+    {-|
+      The 'toMatchedTo' function take an 'IP' address and an 'IPRange',
+      and returns 'True' if the range contains the address.
+    -}
     isMatchedTo :: a -> IPRange a -> Bool
+    {-|
+      The 'toIPX' function take an 'IP' address and returns 'IPX'.
+    -}
     toIPX :: a -> IPX
+    {-|
+      The 'toIPXRange' function take an 'IPRange' address and
+      returns 'IPXRange'.
+    -}
+    toIPXRange :: a -> Int -> IPXRange
     version :: a -> IPVersion
 
 instance IP IPv4 where
@@ -127,6 +139,7 @@ instance IP IPv4 where
     version _ = IPVersion4
     isMatchedTo a r = a `masked` mask r == addr r
     toIPX a = IP4 a
+    toIPXRange a len = IP4Range (makeIPRange a len)
 
 instance IP IPv6 where
     IPv6 (a1,a2,a3,a4) `masked` IPv6 (m1,m2,m3,m4) =
@@ -137,6 +150,7 @@ instance IP IPv6 where
     version _ = IPVersion6
     isMatchedTo a r = a `masked` mask r == addr r
     toIPX a = IP6 a
+    toIPXRange a len = IP6Range (makeIPRange a len)
 
 ----------------------------------------------------------------
 --
@@ -174,14 +188,6 @@ isIPv4 x = version x == IPVersion4
 
 isIPv6 :: (IP a) => a -> Bool
 isIPv6 x = version x == IPVersion6
-
-----------------------------------------------------------------
---
--- Show for IPRange
---
-
-data IPX = IP4 { toIP4 :: IPv4 }
-         | IP6 { toIP6 :: IPv6 }
 
 ----------------------------------------------------------------
 --
@@ -418,3 +424,16 @@ toIPv6 ad = let [x1,x2,x3,x4] = map toWord32 $ split2 ad
       split2 x  = take 2 x : split2 (drop 2 x)
       toWord32 [a1,a2] = fromIntegral $ shift a1 16 + a2
       toWord32 _             = error "toWord32"
+
+----------------------------------------------------------------
+--
+-- IPX and IPXRange
+--
+
+data IPX = IP4 { toIP4 :: IPv4 }
+         | IP6 { toIP6 :: IPv6 }
+         deriving (Eq,Show)
+
+data IPXRange = IP4Range { toIP4Range :: IPRange IPv4 }
+              | IP6Range { toIP6Range :: IPRange IPv6 }
+              deriving (Eq,Show)

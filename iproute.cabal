@@ -16,7 +16,7 @@ Cabal-Version:          >= 1.6
 Build-Type:             Simple
 Extra-Source-Files:     test/Tests.hs test/IPv4Search.hs test/Makefile
 library
-  GHC-Options:          -Wall
+  GHC-Options:          -Wall -fno-warn-unused-do-bind
   Exposed-Modules:      Data.IP
                         Data.IP.RouteTable
   Other-Modules:        Data.IP.RouteTable.Internal

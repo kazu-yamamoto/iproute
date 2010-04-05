@@ -5,7 +5,9 @@
   way branching removed. Both IPv4 and IPv6
   are supported.
 -}
-module Data.IP.RouteTable (IPRTable, empty, insert, lookup, fromList, toList) where
+module Data.IP.RouteTable (
+    IPRTable, empty, insert
+  , Data.IP.RouteTable.Internal.lookup
+  , fromList, toList) where
 
-import Prelude hiding (lookup)
 import Data.IP.RouteTable.Internal
