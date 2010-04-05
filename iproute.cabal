@@ -21,7 +21,7 @@ library
                         Data.IP.RouteTable
   Other-Modules:        Data.IP.RouteTable.Internal
   Build-Depends:        base == 4.2.*,
-                        parsec, containers
+                        parsec >= 3, containers
 Source-Repository head
   Type:                 git
   Location:             git://github.com/kazu-yamamoto/iproute.git
