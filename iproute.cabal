@@ -20,7 +20,7 @@ library
   Exposed-Modules:      Data.IP
                         Data.IP.RouteTable
   Other-Modules:        Data.IP.RouteTable.Internal
-  Build-Depends:        base >= 4.0 && < 10,
+  Build-Depends:        base == 4.2.*,
                         parsec, containers
 Source-Repository head
   Type:                 git
