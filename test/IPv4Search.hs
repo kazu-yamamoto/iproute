@@ -20,16 +20,16 @@ main = flip catch handler $ do
     handler :: ErrorCall -> IO ()
     handler _ = help
 
-loadRoutes :: FilePath -> IO (IPRTable IPv4 (IPRange IPv4))
+loadRoutes :: FilePath -> IO (IPRTable IPv4 (AddrRange IPv4))
 loadRoutes file = do
     cs <- readFile file
     let ls = lines cs
         rs = map readIPv4Range ls
-        kvs = zip rs rs -- value is IPRange itself in this test
+        kvs = zip rs rs -- value is AddrRange itself in this test
         radish = fromList kvs
     return radish
 
-readIPv4Range :: String -> IPRange IPv4
+readIPv4Range :: String -> AddrRange IPv4
 readIPv4Range = read
 
 help :: IO ()

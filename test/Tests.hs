@@ -37,61 +37,61 @@ main = do
 -- Arbitrary
 --
 
-instance Arbitrary (IPRange IPv4) where
+instance Arbitrary (AddrRange IPv4) where
     arbitrary = arbitraryIP toIPv4 255 4 32
 
-instance Arbitrary (IPRange IPv6) where
+instance Arbitrary (AddrRange IPv6) where
     arbitrary = arbitraryIP toIPv6 65535 8 128
 
-arbitraryIP :: IP a => ([Int] -> a) -> Int -> Int -> Int -> Gen (IPRange a)
+arbitraryIP :: Routable a => ([Int] -> a) -> Int -> Int -> Int -> Gen (AddrRange a)
 arbitraryIP func width adrlen msklen = do
   a <- sequence $ take adrlen $ repeat (choose (0,width))
   let adr = func a
   len <- choose (0,msklen)
-  return $ makeIPRange adr len
+  return $ makeAddrRange adr len
 
 ----------------------------------------------------------------
 --
 -- Properties
 --
 
-prop_sort_ipv4 :: [IPRange IPv4] -> Bool
+prop_sort_ipv4 :: [AddrRange IPv4] -> Bool
 prop_sort_ipv4 = sort_ip
 
-prop_sort_ipv6 :: [IPRange IPv6] -> Bool
+prop_sort_ipv6 :: [AddrRange IPv6] -> Bool
 prop_sort_ipv6 = sort_ip
 
-sort_ip :: (IP a, Ord a) => [IPRange a] -> Bool
+sort_ip :: (Routable a, Ord a) => [AddrRange a] -> Bool
 sort_ip xs = fromList (zip xs xs) == let xs' = sort xs
                                      in fromList (zip xs' xs')
 
 ----------------------------------------------------------------
 
-prop_fromto_ipv4 :: [IPRange IPv4] -> Bool
+prop_fromto_ipv4 :: [AddrRange IPv4] -> Bool
 prop_fromto_ipv4 = fromto_ip
 
-prop_fromto_ipv6 :: [IPRange IPv6] -> Bool
+prop_fromto_ipv6 :: [AddrRange IPv6] -> Bool
 prop_fromto_ipv6 = fromto_ip
 
-fromto_ip :: (IP a, Ord a) => [IPRange a] -> Bool
+fromto_ip :: (Routable a, Ord a) => [AddrRange a] -> Bool
 fromto_ip xs = let ys = map fst $ toList $ fromList (zip xs xs)
                in nub (sort xs) == nub (sort ys)
 
 ----------------------------------------------------------------
 
-prop_ord_ipv4 :: [IPRange IPv4] -> Bool
+prop_ord_ipv4 :: [AddrRange IPv4] -> Bool
 prop_ord_ipv4 = ord_ip
 
-prop_ord_ipv6 :: [IPRange IPv6] -> Bool
+prop_ord_ipv6 :: [AddrRange IPv6] -> Bool
 prop_ord_ipv6 = ord_ip
 
-ord_ip :: IP a => [IPRange a] -> Bool
+ord_ip :: Routable a => [AddrRange a] -> Bool
 ord_ip xs = isOrdered (fromList (zip xs xs))
 
-isOrdered :: IP k => IPRTable k a -> Bool
+isOrdered :: Routable k => IPRTable k a -> Bool
 isOrdered = foldt (\x v -> v && ordered x) True
 
-ordered :: IP k => IPRTable k a -> Bool
+ordered :: Routable k => IPRTable k a -> Bool
 ordered Nil = True
 ordered (Node n l r) = ordered' n l && ordered' n r
   where
@@ -100,16 +100,16 @@ ordered (Node n l r) = ordered' n l && ordered' n r
 
 ----------------------------------------------------------------
 
-prop_search_ipv4 :: IPRange IPv4 -> [IPRange IPv4] -> Bool
+prop_search_ipv4 :: AddrRange IPv4 -> [AddrRange IPv4] -> Bool
 prop_search_ipv4 = search_ip
 
-prop_search_ipv6 :: IPRange IPv6 -> [IPRange IPv6] -> Bool
+prop_search_ipv6 :: AddrRange IPv6 -> [AddrRange IPv6] -> Bool
 prop_search_ipv6 = search_ip
 
-search_ip :: IP a => IPRange a -> [IPRange a] -> Bool
+search_ip :: Routable a => AddrRange a -> [AddrRange a] -> Bool
 search_ip k xs = lookup k (fromList (zip xs xs)) == linear k xs
 
-linear :: IP a => IPRange a -> [IPRange a] -> Maybe (IPRange a)
+linear :: Routable a => AddrRange a -> [AddrRange a] -> Maybe (AddrRange a)
 linear = linear' Nothing
     where
       linear' a _ [] = a
