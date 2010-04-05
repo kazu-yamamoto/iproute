@@ -6,6 +6,11 @@ import Data.IP.Routable
 
 ----------------------------------------------------------------
 
+{-|
+  A class to convert 'IPv4'/'IPv6' to 'IP' and
+  'IPRange' 'IPv4' / 'IPRange' 'IPv6' to 'IPRange'.
+-}
+
 class IPX a where
     {-|
       The 'toIPX' function take an 'IP' address and returns 'IPX'.

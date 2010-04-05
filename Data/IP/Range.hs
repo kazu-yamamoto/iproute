@@ -9,6 +9,10 @@ import Text.Parsec.String
 
 ----------------------------------------------------------------
 
+{-|
+  A unified data for 'AddrRange' 'IPv4' and 'AddrRange' 'IPv6'.
+-}
+
 data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
              | IPv6Range { tpv6range :: AddrRange IPv6 }
              deriving (Eq,Show)
@@ -19,12 +23,12 @@ data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
 --
 
 {-|
-  The IP range consists of an 'IP' address, a contiguous 'IP' mask,
-  and mask length. The contiguous 'IP' mask and the mask length
+  The Addr range consists of an address, a contiguous mask,
+  and mask length. The contiguous mask and the mask length
   are essentially same information but contained for pre
   calculation.
 
- To create this, use 'makeAddrRange' or 'read' \"192.0.2.0/24\" :: 'AddrRange' 'IPv4'
+  To create this, use 'makeAddrRange' or 'read' \"192.0.2.0/24\" :: 'AddrRange' 'IPv4'
 -}
 data AddrRange a = AddrRange {
         -- |The 'addr' function returns an address from 'AddrRange'.

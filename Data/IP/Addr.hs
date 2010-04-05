@@ -11,6 +11,10 @@ import Text.Printf
 
 ----------------------------------------------------------------
 
+{-|
+  A unified IP data for 'IPv4' and 'IPv6'.
+-}
+
 data IP = IPv4 { ipv4 :: IPv4 }
         | IPv6 { ipv6 :: IPv6 }
         deriving (Eq,Show)
