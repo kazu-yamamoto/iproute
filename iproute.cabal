@@ -21,9 +21,8 @@ library
                         Data.IP.RouteTable
   Other-Modules:        Data.IP.Addr
                         Data.IP.Mask
+                        Data.IP.Op
                         Data.IP.Range
-                        Data.IP.Routable
-                        Data.IP.IPX
                         Data.IP.RouteTable.Internal
   Build-Depends:        base == 4.2.*,
                         parsec >= 3, containers

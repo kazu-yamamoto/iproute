@@ -7,9 +7,72 @@
 -}
 module Data.IP.RouteTable.Internal where
 
-import Data.IP
+import Data.Bits
+import Data.IP.Addr
+import Data.IP.Op
+import Data.IP.Range
+import Data.IntMap (IntMap, (!))
+import qualified Data.IntMap as IM (fromList)
 import Data.List (foldl')
+import Data.Word
 import Prelude hiding (lookup)
+
+----------------------------------------------------------------
+
+{-|
+  A class to contain IPv4 and IPv6.
+-}
+class Addr a => Routable a where
+    {-|
+      The 'intToTBit' function takes 'Int' and returns an 'Routable' address
+      whose only n-th bit is set.
+    -}
+    intToTBit   :: Int -> a
+    {-|
+      The 'isZero' function takes an 'Routable' address and an test bit
+      'Routable' address and returns 'True' is the bit is unset,
+      otherwise returns 'False'.
+    -}
+    isZero :: a -> a -> Bool
+
+instance Routable IPv4 where
+    intToTBit = intToTBitIPv4
+    isZero a b = a `masked` b == IP4 0
+
+instance Routable IPv6 where
+    intToTBit = intToTBitIPv6
+    isZero a b = a `masked` b == IP6 (0,0,0,0)
+
+----------------------------------------------------------------
+--
+-- Test Bit
+--
+
+intToTBitIPv4 :: Int -> IPv4
+intToTBitIPv4 len = IP4 (intToTBitsIPv4 ! len)
+
+intToTBitIPv6 :: Int -> IPv6
+intToTBitIPv6 len = IP6 (intToTBitsIPv6 ! len)
+
+intToTBitsWord32 :: [Word32]
+intToTBitsWord32 = iterate (flip shift (-1)) 0x80000000
+
+intToTBitsIPv4 :: IntMap IPv4Addr
+intToTBitsIPv4 = IM.fromList $ zip [0..32] intToTBitsWord32
+
+intToTBitsIPv6 :: IntMap IPv6Addr
+intToTBitsIPv6 = IM.fromList $ zip [0..128] bs
+  where
+    bs = b1 ++ b2 ++ b3 ++ b4 ++ b5
+    b1 = map (\vbit -> (vbit,all0,all0,all0)) intToTBits
+    b2 = map (\vbit -> (all0,vbit,all0,all0)) intToTBits
+    b3 = map (\vbit -> (all0,all0,vbit,all0)) intToTBits
+    b4 = map (\vbit -> (all0,all0,all0,vbit)) intToTBits
+    b5 =              [(all0,all0,all0,all0)]
+    intToTBits = take 32 $ intToTBitsWord32
+    all0 = 0x00000000
+
+----------------------------------------------------------------
 
 {-|
   The Tree structure for IP routing table based on TRIE with

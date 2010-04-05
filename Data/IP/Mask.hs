@@ -5,6 +5,8 @@ import Data.IP.Addr
 import Data.Word
 import Data.IntMap hiding (map)
 
+----------------------------------------------------------------
+
 maskIPv4 :: Int -> IPv4
 maskIPv4 len = IP4 (masksIPv4 ! len)
 

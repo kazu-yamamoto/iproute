@@ -7,12 +7,10 @@ module Data.IP (
   , IPv6, toIPv6
   , IPRange (..)
   , AddrRange (addr, mask, mlen)
-  , IPX (..)
-  , Routable (..)
+  , Addr (..)
   , makeAddrRange, (>:>), isMatchedTo
   ) where
 
 import Data.IP.Addr
+import Data.IP.Op
 import Data.IP.Range
-import Data.IP.Routable
-import Data.IP.IPX

@@ -6,8 +6,10 @@
   are supported.
 -}
 module Data.IP.RouteTable (
-    IPRTable, empty, insert
+    Routable (..)
+  , IPRTable, empty, insert
   , Data.IP.RouteTable.Internal.lookup
-  , fromList, toList) where
+  , fromList, toList
+  ) where
 
 import Data.IP.RouteTable.Internal
