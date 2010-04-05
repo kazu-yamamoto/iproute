@@ -9,13 +9,13 @@ import Data.IP.Range
 
 class Eq a => Addr a where
     {-|
-      The 'masked' function takes an 'Routable' address and a contiguous
-      'Routable' mask and returned a masked 'Routable' address.
+      The 'masked' function takes an 'Addr' and a contiguous
+      mask and returned a masked 'Addr'.
     -}
     masked :: a -> a -> a
     {-|
       The 'intToMask' function takes 'Int' and returns a contiguous
-      'Routable' mask.
+      mask.
     -}
     intToMask :: Int -> a
 
