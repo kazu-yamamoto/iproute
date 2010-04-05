@@ -8,11 +8,11 @@
 
 import Data.IP
 import Data.IP.RouteTable.Internal
-import Test.QuickCheck hiding (check, test)
-import Test.QuickCheck.Batch
+import Test.QuickCheck
 import Prelude hiding (lookup)
 import Data.List (sort, nub)
 
+{-
 options :: TestOptions
 options = TestOptions { no_of_tests     = 300
                       , length_of_tests = 0
@@ -30,6 +30,7 @@ main = do
                           , run prop_ord_ipv4
                           , run prop_ord_ipv6
                           ]
+-}
 
 ----------------------------------------------------------------
 --
@@ -38,11 +39,9 @@ main = do
 
 instance Arbitrary (IPRange IPv4) where
     arbitrary = arbitraryIP toIPv4 255 4 32
-    coarbitrary = undefined
 
 instance Arbitrary (IPRange IPv6) where
     arbitrary = arbitraryIP toIPv6 65535 8 128
-    coarbitrary = error "coarbitrary"
 
 arbitraryIP :: IP a => ([Int] -> a) -> Int -> Int -> Int -> Gen (IPRange a)
 arbitraryIP func width adrlen msklen = do
