@@ -14,7 +14,7 @@ import Text.Parsec.String
 -}
 
 data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
-             | IPv6Range { tpv6range :: AddrRange IPv6 }
+             | IPv6Range { ipv6range :: AddrRange IPv6 }
              deriving (Eq,Show)
 
 ----------------------------------------------------------------
