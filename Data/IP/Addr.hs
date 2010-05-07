@@ -139,7 +139,7 @@ dig = do { char '0'; return 0 } <|>
 
 ip4 :: Parser IPv4
 ip4 = do
-    as <- dig `sepBy1` (char '.')
+    as <- dig `sepBy1` char '.'
     check as
     return $ toIPv4 as
   where
@@ -170,28 +170,24 @@ ip6 = do
 ip6' :: Parser [Int]
 ip6' =      do colon2
                bs <- option [] hexcolon
-               rs <- format [] bs
-               return rs
+               format [] bs
         <|> try (do rs <- hexcolon
                     check rs
                     return rs)
         <|> do bs1 <- hexcolon2
                bs2 <- option [] hexcolon
-               rs <- format bs1 bs2
-               return rs
+               format bs1 bs2
     where
       colon2 = string "::"
-      hexcolon = do bs <- hex `sepBy1` (char ':')
-                    return bs
-      hexcolon2 = do bs <- manyTill (do{ b <- hex; char ':'; return b }) (char ':')
-                     return bs
+      hexcolon = hex `sepBy1` char ':'
+      hexcolon2 = manyTill (do{ b <- hex; char ':'; return b }) (char ':')
       format bs1 bs2 = do let len1 = length bs1
                               len2 = length bs2
                           when (len1 > 7) (unexpected "IPv6 address")
                           when (len2 > 7) (unexpected "IPv6 address")
                           let len = 8 - len1 - len2
                           when (len <= 0) (unexpected "IPv6 address")
-                          let spring = take len $ repeat 0
+                          let spring = replicate len 0
                           return $ bs1 ++ spring ++ bs2
       check bs = when (length bs /= 8) (unexpected "IPv6 address")
 

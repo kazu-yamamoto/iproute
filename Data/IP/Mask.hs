@@ -14,7 +14,7 @@ maskIPv6 :: Int -> IPv6
 maskIPv6 len = IP6 (masksIPv6 ! len)
 
 masksWord32 :: [Word32]
-masksWord32 = take 33 $ iterate (flip shift 1) 0xffffffff
+masksWord32 = take 33 $ iterate (`shift` 1) 0xffffffff
 
 masksIPv4 :: IntMap IPv4Addr
 masksIPv4 = fromList $ zip [32,31..0] masksWord32
