@@ -22,13 +22,14 @@ library
     GHC-Options:        -Wall -O2
   Exposed-Modules:      Data.IP
                         Data.IP.RouteTable
-  Other-Modules:        Data.IP.Addr
+  Other-Modules:        Parsec
+                        Data.IP.Addr
                         Data.IP.Mask
                         Data.IP.Op
                         Data.IP.Range
                         Data.IP.RouteTable.Internal
   Build-Depends:        base >= 4 && < 5,
-                        parsec >= 3, containers
+                        parsec, containers
 Source-Repository head
   Type:                 git
   Location:             git://github.com/kazu-yamamoto/iproute.git

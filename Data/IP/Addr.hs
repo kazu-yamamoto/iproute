@@ -5,8 +5,7 @@ import Data.Bits
 import Data.Char
 import Data.List (foldl')
 import Data.Word
-import Text.Parsec
-import Text.Parsec.String
+import Parsec
 import Text.Printf
 
 ----------------------------------------------------------------

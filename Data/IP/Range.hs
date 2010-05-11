@@ -4,8 +4,7 @@ module Data.IP.Range where
 import Control.Monad
 import Data.IP.Addr
 import Data.IP.Mask
-import Text.Parsec
-import Text.Parsec.String
+import Parsec
 
 ----------------------------------------------------------------
 
