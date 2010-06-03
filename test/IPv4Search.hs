@@ -15,7 +15,7 @@ main = flip catch handler $ do
         target = readIPv4Range range
     rt <- loadRoutes file
     let res = lookup target rt
-    putStrLn $ show res
+    print res
   where
     handler :: ErrorCall -> IO ()
     handler _ = help

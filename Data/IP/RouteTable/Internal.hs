@@ -55,7 +55,7 @@ intToTBitIPv6 :: Int -> IPv6
 intToTBitIPv6 len = IP6 (intToTBitsIPv6 ! len)
 
 intToTBitsWord32 :: [Word32]
-intToTBitsWord32 = iterate (flip shift (-1)) 0x80000000
+intToTBitsWord32 = iterate (`shift` (-1)) 0x80000000
 
 intToTBitsIPv4 :: IntMap IPv4Addr
 intToTBitsIPv4 = IM.fromList $ zip [0..32] intToTBitsWord32
@@ -69,7 +69,7 @@ intToTBitsIPv6 = IM.fromList $ zip [0..128] bs
     b3 = map (\vbit -> (all0,all0,vbit,all0)) intToTBits
     b4 = map (\vbit -> (all0,all0,all0,vbit)) intToTBits
     b5 =              [(all0,all0,all0,all0)]
-    intToTBits = take 32 $ intToTBitsWord32
+    intToTBits = take 32 intToTBitsWord32
     all0 = 0x00000000
 
 ----------------------------------------------------------------
@@ -94,14 +94,14 @@ empty = Nil
 ----------------------------------------------------------------
 
 newEntry :: (Routable k) => AddrRange k -> Maybe a -> Entry k a
-newEntry k v = Entry k (intToTBit (mlen k)) v
+newEntry k = Entry k (intToTBit (mlen k))
 
 {-|
   The 'insert' function inserts a value with a key of 'AddrRange' to 'IPRTable'
   and returns a new 'IPRTable'.
 -}
 insert :: (Routable k) => AddrRange k -> a -> IPRTable k a -> IPRTable k a
-insert k v s = inject (newEntry k (Just v)) s
+insert k v = inject (newEntry k (Just v))
 
 inject :: (Routable k) => Entry k a -> IPRTable k a -> IPRTable k a
 inject e Nil    = Node e Nil Nil

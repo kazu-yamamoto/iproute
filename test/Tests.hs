@@ -1,4 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
+
+module Tests where
+
 ----------------------------------------------------------------
 --
 -- Tests for IP.RouteTable
@@ -6,11 +9,12 @@
 --    runghc -i.. Tests.hs
 --
 
+import Control.Monad
 import Data.IP
 import Data.IP.RouteTable.Internal
-import Test.QuickCheck
-import Prelude hiding (lookup)
 import Data.List (sort, nub)
+import Prelude hiding (lookup)
+import Test.QuickCheck
 
 {-
 options :: TestOptions
@@ -20,7 +24,7 @@ options = TestOptions { no_of_tests     = 300
                       }
 
 main :: IO ()
-main = do
+main =
   runTests "base" options [ run prop_sort_ipv4
                           , run prop_sort_ipv6
                           , run prop_fromto_ipv4
@@ -31,6 +35,9 @@ main = do
                           , run prop_ord_ipv6
                           ]
 -}
+
+main :: IO ()
+main = quickCheckWith stdArgs {maxSuccess = 300} prop_search_ipv4
 
 ----------------------------------------------------------------
 --
@@ -45,7 +52,7 @@ instance Arbitrary (AddrRange IPv6) where
 
 arbitraryIP :: Routable a => ([Int] -> a) -> Int -> Int -> Int -> Gen (AddrRange a)
 arbitraryIP func width adrlen msklen = do
-  a <- sequence $ take adrlen $ repeat (choose (0,width))
+  a <- replicateM adrlen (choose (0,width))
   let adr = func a
   len <- choose (0,msklen)
   return $ makeAddrRange adr len
