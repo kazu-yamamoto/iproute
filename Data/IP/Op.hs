@@ -20,7 +20,7 @@ class Eq a => Addr a where
     intToMask :: Int -> a
 
 instance Addr IPv4 where
-    IP4 a `masked` IP4 m = IP4 (a .&. m)
+    masked    = maskedIPv4
     intToMask = maskIPv4
 
 instance Addr IPv6 where

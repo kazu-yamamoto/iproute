@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Data.IP.Range where
 
+import Data.Bits
 import Control.Monad
 import Data.IP.Addr
 import Data.IP.Mask
@@ -73,15 +74,25 @@ ip4range = do
     ip <- ip4
     len <- option 32 $ do { char '/'; dig }
     check len
-    return $ AddrRange ip (maskIPv4 len) len
+    let msk = maskIPv4 len
+        adr = ip `maskedIPv4` msk
+    return $ AddrRange adr msk len
   where
     check len = when (len < 0 || 32 < len) (unexpected "IPv4 mask length")
+
+maskedIPv4 :: IPv4 -> IPv4 -> IPv4
+IP4 a `maskedIPv4` IP4 m = IP4 (a .&. m)
 
 ip6range :: Parser (AddrRange IPv6)
 ip6range = do
     ip <- ip6
     len <- option 128 $ do { char '/'; dig }
     check len
-    return $ AddrRange ip (maskIPv6 len) len
+    let msk = maskIPv6 len
+        adr = ip `maskedIPv6` msk
+    return $ AddrRange adr msk len
   where
     check len = when (len < 0 || 128 < len) (unexpected ("IPv6 mask length: " ++ show len))
+
+maskedIPv6 :: IPv6 -> IPv6 -> IPv6
+IP6 (a1,a2,a3,a4) `maskedIPv6` IP6 (m1,m2,m3,m4) = IP6 (a1.&.m1,a2.&.m2,a3.&.m3,a4.&.m4)
