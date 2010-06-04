@@ -14,30 +14,45 @@ import Data.IP
 import Data.IP.RouteTable.Internal
 import Data.List (sort, nub)
 import Prelude hiding (lookup)
+import Test.Framework (defaultMain, testGroup, Test)
+import Test.Framework.Providers.HUnit
+import Test.Framework.Providers.QuickCheck2
+import Test.HUnit hiding (Test)
 import Test.QuickCheck
 
-{-
-options :: TestOptions
-options = TestOptions { no_of_tests     = 300
-                      , length_of_tests = 0
-                      , debug_tests     = False
-                      }
+tests :: [Test]
+tests = [ testGroup "Property Test" [
+               testProperty "Sort IPv4" prop_sort_ipv4
+             , testProperty "Sort IPv6" prop_sort_ipv6
+             , testProperty "FromTo IPv4" prop_fromto_ipv4
+             , testProperty "FromTo IPv6" prop_fromto_ipv6
+             , testProperty "Search IPv4" prop_search_ipv4
+             , testProperty "Search IPv6" prop_search_ipv6
+             , testProperty "Ord IPv4" prop_ord_ipv4
+             , testProperty "Ord IPv6" prop_ord_ipv6
+             ]
+        , testGroup "Test case" [
+               testCase "toIPv4" test_toIPv4
+             , testCase "toIPv6" test_toIPv6
+             , testCase "read IPv4" test_read_IPv4
+             , testCase "read IPv6" test_read_IPv6
+             , testCase "read IPv4 range" test_read_IPv4_range
+             , testCase "read IPv6 range" test_read_IPv6_range
+             , testCase "makeAddrRange IPv4" test_makeAddrRange_IPv4
+             , testCase "makeAddrRange IPv6" test_makeAddrRange_IPv6
+             , testCase "contains IPv4" test_contains_IPv4
+             , testCase "contains IPv4 2" test_contains_IPv4_2
+             , testCase "contains IPv6" test_contains_IPv6
+             , testCase "contains IPv6 2" test_contains_IPv6_2
+             , testCase "isMatchedTo IPv4" test_isMatchedTo_IPv4
+             , testCase "isMatchedTo IPv4 2" test_isMatchedTo_IPv4_2
+             , testCase "isMatchedTo IPv6" test_isMatchedTo_IPv6
+             , testCase "isMatchedTo IPv6 2" test_isMatchedTo_IPv6_2
+             ]
+        ]
 
 main :: IO ()
-main =
-  runTests "base" options [ run prop_sort_ipv4
-                          , run prop_sort_ipv6
-                          , run prop_fromto_ipv4
-                          , run prop_fromto_ipv6
-                          , run prop_search_ipv4
-                          , run prop_search_ipv6
-                          , run prop_ord_ipv4
-                          , run prop_ord_ipv6
-                          ]
--}
-
-main :: IO ()
-main = quickCheckWith stdArgs {maxSuccess = 300} prop_search_ipv4
+main = defaultMain tests
 
 ----------------------------------------------------------------
 --
@@ -128,3 +143,59 @@ linear = linear' Nothing
                         then linear' (Just x) k xs
                         else linear' (Just a) k xs
           | otherwise = linear' (Just a) k xs
+
+----------------------------------------------------------------
+
+test_toIPv4 :: Assertion
+test_toIPv4 = show (toIPv4 [192,0,2,1]) @?= "192.0.2.1"
+
+test_toIPv6 :: Assertion
+test_toIPv6 = show (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) @?= "2001:db8:00:00:00:00:00:01"
+
+test_read_IPv4 :: Assertion
+test_read_IPv4 = show (read "192.0.2.1" :: IPv4) @?= "192.0.2.1"
+
+test_read_IPv6 :: Assertion
+test_read_IPv6 = show (read "2001:db8:00:00:00:00:00:01" :: IPv6) @?= "2001:db8:00:00:00:00:00:01"
+
+test_read_IPv4_range :: Assertion
+test_read_IPv4_range = show (read "192.0.2.1/24" :: AddrRange IPv4) @?= "192.0.2.0/24"
+
+test_read_IPv6_range :: Assertion
+test_read_IPv6_range = show (read "2001:db8:00:00:00:00:00:01/48" :: AddrRange IPv6) @?= "2001:db8:00:00:00:00:00:00/48"
+
+----------------------------------------------------------------
+
+test_makeAddrRange_IPv4 :: Assertion
+test_makeAddrRange_IPv4 = show (makeAddrRange (toIPv4 [127,0,2,1]) 8) @?= "127.0.0.0/8"
+
+test_makeAddrRange_IPv6 :: Assertion
+test_makeAddrRange_IPv6 = show (makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 8) @?= "2000:00:00:00:00:00:00:00/8"
+
+----------------------------------------------------------------
+
+test_contains_IPv4 :: Assertion
+test_contains_IPv4 = makeAddrRange (toIPv4 [127,0,2,1]) 8 >:> makeAddrRange (toIPv4 [127,0,2,1]) 24 @?= True
+
+test_contains_IPv4_2 :: Assertion
+test_contains_IPv4_2 = makeAddrRange (toIPv4 [127,0,2,1]) 24 >:> makeAddrRange (toIPv4 [127,0,2,1]) 8 @?= False
+
+test_contains_IPv6 :: Assertion
+test_contains_IPv6 = makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 16 >:> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 32 @?= True
+
+test_contains_IPv6_2 :: Assertion
+test_contains_IPv6_2 = makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 32 >:> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 16 @?= False
+
+----------------------------------------------------------------
+
+test_isMatchedTo_IPv4 :: Assertion
+test_isMatchedTo_IPv4 = toIPv4 [127,0,2,1] `isMatchedTo` makeAddrRange (toIPv4 [127,0,2,1]) 24 @?= True
+
+test_isMatchedTo_IPv4_2 :: Assertion
+test_isMatchedTo_IPv4_2 = toIPv4 [127,0,2,0] `isMatchedTo` makeAddrRange (toIPv4 [127,0,2,1]) 32 @?= False
+
+test_isMatchedTo_IPv6 :: Assertion
+test_isMatchedTo_IPv6 = toIPv6 [0x2001,0xDB8,0,0,0,0,0,1] `isMatchedTo` makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 32 @?= True
+
+test_isMatchedTo_IPv6_2 :: Assertion
+test_isMatchedTo_IPv6_2 = toIPv6 [0x2001,0xDB8,0,0,0,0,0,0] `isMatchedTo` makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 128 @?= False
