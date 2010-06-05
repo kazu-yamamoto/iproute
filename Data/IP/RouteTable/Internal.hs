@@ -79,9 +79,10 @@ intToTBitsIPv6 = IM.fromList $ zip [0..128] bs
   one way branching removed. This is an abstracted data structure,
   so you cannot touch its inside. Please use 'insert' or 'lookup', instead.
 -}
-data IPRTable k a = Nil | Node (Entry k a) (IPRTable k a) (IPRTable k a) deriving (Eq, Show)
-
-data (Routable k) => Entry k a = Entry (AddrRange k) k (Maybe a) deriving (Eq, Show)
+data IPRTable k a =
+    Nil
+  | Node (AddrRange k) k (Maybe a) (IPRTable k a) (IPRTable k a)
+  deriving (Eq, Show)
 
 ----------------------------------------------------------------
 
@@ -93,48 +94,48 @@ empty = Nil
 
 ----------------------------------------------------------------
 
-newEntry :: (Routable k) => AddrRange k -> Maybe a -> Entry k a
-newEntry k = Entry k (intToTBit (mlen k))
-
 {-|
   The 'insert' function inserts a value with a key of 'AddrRange' to 'IPRTable'
   and returns a new 'IPRTable'.
 -}
 insert :: (Routable k) => AddrRange k -> a -> IPRTable k a -> IPRTable k a
-insert k v = inject (newEntry k (Just v))
+insert k1 v1 Nil = Node k1 tb1 (Just v1) Nil Nil
+  where
+    tb1 = keyToTestBit k1
+insert k1 v1 s@(Node k2 tb2 v2 l r)
+    | k1 == k2  = Node k1 tb1 (Just v1) l r
+    | k2 >:> k1 = if isLeft k1 tb2
+                  then Node k2 tb2 v2 (insert k1 v1 l) r
+                  else Node k2 tb2 v2 l (insert k1 v1 r)
+    | k1 >:> k2 = if isLeft k2 tb1
+                  then Node k1 tb1 (Just v1) s Nil
+                  else Node k1 tb1 (Just v1) Nil s
+    | otherwise = let n = Node k1 tb1 (Just v1) Nil Nil
+                  in join n s
+  where
+    tb1 = keyToTestBit k1
 
-inject :: (Routable k) => Entry k a -> IPRTable k a -> IPRTable k a
-inject e Nil    = Node e Nil Nil
-inject e1@(Entry k1 _ _) s@(Node e2@(Entry k2 _ _) l r)
-    | k1 == k2  = Node e1 l r
-    | k2 >:> k1 = if isLeft k1 e2
-                  then Node e2 (inject e1 l) r
-                  else Node e2 l (inject e1 r)
-    | k1 >:> k2 = if isLeft k2 e1
-                  then Node e1 s Nil
-                  else Node e1 Nil s
-    | otherwise = let n = Node e1 Nil Nil
-                  in glue n s
+join :: Routable k => IPRTable k a -> IPRTable k a -> IPRTable k a
+join s1@(Node k1 _ _ _ _) s2@(Node k2 _ _ _ _) =
+    let kg = glue 0 k1 k2
+        tbg = keyToTestBit kg
+    in if isLeft k1 tbg
+       then Node kg tbg Nothing s1 s2
+       else Node kg tbg Nothing s2 s1
+join _ _ = error "join"
 
-glue :: Routable k => IPRTable k a -> IPRTable k a -> IPRTable k a
-glue s1@(Node (Entry k1 _ _) _ _) s2@(Node (Entry k2 _ _) _ _) =
-    let kg = makeGlueRange 0 k1 k2
-        eg  = newEntry kg Nothing
-    in if isLeft k1 eg
-       then Node eg s1 s2
-       else Node eg s2 s1
-glue _ _ = error "glue"
-
-makeGlueRange :: (Routable k) => Int -> AddrRange k -> AddrRange k -> AddrRange k
-makeGlueRange n k1 k2
-    | addr k1 `masked` mk == addr k2 `masked` mk = makeGlueRange (n + 1) k1 k2
-
+glue :: (Routable k) => Int -> AddrRange k -> AddrRange k -> AddrRange k
+glue n k1 k2
+    | addr k1 `masked` mk == addr k2 `masked` mk = glue (n + 1) k1 k2
     | otherwise = makeAddrRange (addr k1) (n - 1)
   where
     mk = intToMask n
 
-isLeft :: Routable k => AddrRange k -> Entry k a -> Bool
-isLeft adr (Entry _ tb _) = isZero (addr adr) tb
+keyToTestBit :: Routable k => AddrRange k -> k
+keyToTestBit = intToTBit . mlen
+
+isLeft :: Routable k => AddrRange k -> k -> Bool
+isLeft adr = isZero (addr adr)
 
 ----------------------------------------------------------------
 
@@ -147,15 +148,15 @@ lookup k s = search k s Nothing
 
 search :: Routable k => AddrRange k -> IPRTable k a -> Maybe a -> Maybe a
 search _ Nil res = res
-search k1 (Node e2@(Entry k2 _ Nothing) l r) res
+search k1 (Node k2 tb2 Nothing l r) res
     | k1 == k2  = res
-    | k2 >:> k1 = if isLeft k1 e2
+    | k2 >:> k1 = if isLeft k1 tb2
                   then search k1 l res
                   else search k1 r res
     | otherwise = res
-search k1 (Node e2@(Entry k2 _ vl) l r) res
+search k1 (Node k2 tb2 vl l r) res
     | k1 == k2  = vl
-    | k2 >:> k1 = if isLeft k1 e2
+    | k2 >:> k1 = if isLeft k1 tb2
                   then search k1 l vl
                   else search k1 r vl
     | otherwise = res
@@ -177,11 +178,11 @@ toList :: Routable k => IPRTable k a -> [(AddrRange k, a)]
 toList = foldt toL []
   where
     toL Nil xs = xs
-    toL (Node (Entry _ _ Nothing) _ _) xs = xs
-    toL (Node (Entry k _ (Just a)) _ _) xs = (k,a) : xs
+    toL (Node _ _ Nothing  _ _) xs = xs
+    toL (Node k _ (Just a) _ _) xs = (k,a) : xs
 
 ----------------------------------------------------------------
 
 foldt :: (IPRTable k a -> b -> b) -> b -> IPRTable k a -> b
 foldt _ v Nil = v
-foldt func v rt@(Node _ l r) = foldt func (foldt func (func rt v) l) r
+foldt func v rt@(Node _ _ _ l r) = foldt func (foldt func (func rt v) l) r

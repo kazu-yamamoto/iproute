@@ -31,7 +31,12 @@ tests = [ testGroup "Property Test" [
              , testProperty "Ord IPv4" prop_ord_ipv4
              , testProperty "Ord IPv6" prop_ord_ipv6
              ]
-        , testGroup "Test case" [
+        , testGroup "Test case for routing table" [
+               testCase "fromto IPv4" test_fromto_ipv4
+             , testCase "lookup IPv4" test_lookup_ipv4
+             , testCase "lookup2 IPv4" test_lookup_ipv4_2
+             ]
+        , testGroup "Test case for IP" [
                testCase "toIPv4" test_toIPv4
              , testCase "toIPv6" test_toIPv6
              , testCase "read IPv4" test_read_IPv4
@@ -115,10 +120,10 @@ isOrdered = foldt (\x v -> v && ordered x) True
 
 ordered :: Routable k => IPRTable k a -> Bool
 ordered Nil = True
-ordered (Node n l r) = ordered' n l && ordered' n r
+ordered (Node k _ _ l r) = ordered' k l && ordered' k r
   where
     ordered' _ Nil = True
-    ordered' (Entry k1 _ _) (Node (Entry k2 _ _) _ _) = k1 >:> k2
+    ordered' k1 (Node k2 _ _ _ _) = k1 >:> k2
 
 ----------------------------------------------------------------
 
@@ -199,3 +204,44 @@ test_isMatchedTo_IPv6 = toIPv6 [0x2001,0xDB8,0,0,0,0,0,1] `isMatchedTo` makeAddr
 
 test_isMatchedTo_IPv6_2 :: Assertion
 test_isMatchedTo_IPv6_2 = toIPv6 [0x2001,0xDB8,0,0,0,0,0,0] `isMatchedTo` makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 128 @?= False
+
+----------------------------------------------------------------
+
+ipv4_list :: [AddrRange IPv4]
+ipv4_list = [
+    read "0.0.0.0/0"
+  , read "133.4.0.0/16"
+  , read "133.5.0.0/16"
+  , read "133.5.16.0/24"
+  , read "133.5.23.0/24"
+  ]
+
+test_fromto_ipv4 :: Assertion
+test_fromto_ipv4 = (sort . toList . fromList $ pairs) @?= pairs
+  where
+    pairs = sort $ zip ipv4_list ipv4_list
+
+test_lookup_ipv4 :: Assertion
+test_lookup_ipv4 = do
+    let rt = fromList pairs
+    lookup (read "127.0.0.1") rt @?= Just (read "0.0.0.0/0")
+    lookup (read "133.3.0.1") rt @?= Just (read "0.0.0.0/0")
+    lookup (read "133.4.0.0") rt @?= Just (read "133.4.0.0/16")
+    lookup (read "133.4.0.1") rt @?= Just (read "133.4.0.0/16")
+    lookup (read "133.5.16.0") rt @?= Just (read "133.5.16.0/24")
+    lookup (read "133.5.16.1") rt @?= Just (read "133.5.16.0/24")
+  where
+    pairs = zip ipv4_list ipv4_list
+
+test_lookup_ipv4_2 :: Assertion
+test_lookup_ipv4_2 = do
+    let rt = fromList pairs
+    lookup (read "127.0.0.1") rt @?= Nothing
+    lookup (read "133.3.0.1") rt @?= Nothing
+    lookup (read "133.4.0.0") rt @?= Just (read "133.4.0.0/16")
+    lookup (read "133.4.0.1") rt @?= Just (read "133.4.0.0/16")
+    lookup (read "133.5.16.0") rt @?= Just (read "133.5.16.0/24")
+    lookup (read "133.5.16.1") rt @?= Just (read "133.5.16.0/24")
+  where
+    ipv4_list' = tail ipv4_list
+    pairs = zip ipv4_list' ipv4_list'
