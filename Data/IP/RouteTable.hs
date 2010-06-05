@@ -4,6 +4,9 @@
   match base. It is a kind of TRIE with one
   way branching removed. Both IPv4 and IPv6
   are supported.
+
+  For more information, see:
+      <http://www.mew.org/~kazu/proj/iproute/>
 -}
 module Data.IP.RouteTable (
     Routable (..)
