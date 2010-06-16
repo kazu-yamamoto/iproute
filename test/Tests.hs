@@ -41,6 +41,7 @@ tests = [ testGroup "Property Test" [
              , testCase "toIPv6" test_toIPv6
              , testCase "read IPv4" test_read_IPv4
              , testCase "read IPv6" test_read_IPv6
+             , testCase "read IPv6 2" test_read_IPv6_2
              , testCase "read IPv4 range" test_read_IPv4_range
              , testCase "read IPv6 range" test_read_IPv6_range
              , testCase "makeAddrRange IPv4" test_makeAddrRange_IPv4
@@ -162,6 +163,9 @@ test_read_IPv4 = show (read "192.0.2.1" :: IPv4) @?= "192.0.2.1"
 
 test_read_IPv6 :: Assertion
 test_read_IPv6 = show (read "2001:db8:00:00:00:00:00:01" :: IPv6) @?= "2001:db8:00:00:00:00:00:01"
+
+test_read_IPv6_2 :: Assertion
+test_read_IPv6_2 = show (read "2001:240:11e:c00::101" :: IPv6) @?= "2001:240:11e:c00:00:00:00:101"
 
 test_read_IPv4_range :: Assertion
 test_read_IPv4_range = show (read "192.0.2.1/24" :: AddrRange IPv4) @?= "192.0.2.0/24"

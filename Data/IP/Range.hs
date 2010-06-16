@@ -77,7 +77,7 @@ ip4range = do
         adr = ip `maskedIPv4` msk
     return $ AddrRange adr msk len
   where
-    check len = when (len < 0 || 32 < len) (error "IPv4 mask length")
+    check len = when (len < 0 || 32 < len) (fail "IPv4 mask length")
 
 maskedIPv4 :: IPv4 -> IPv4 -> IPv4
 IP4 a `maskedIPv4` IP4 m = IP4 (a .&. m)
@@ -91,7 +91,7 @@ ip6range = do
         adr = ip `maskedIPv6` msk
     return $ AddrRange adr msk len
   where
-    check len = when (len < 0 || 128 < len) (error ("IPv6 mask length: " ++ show len))
+    check len = when (len < 0 || 128 < len) (fail ("IPv6 mask length: " ++ show len))
 
 maskedIPv6 :: IPv6 -> IPv6 -> IPv6
 IP6 (a1,a2,a3,a4) `maskedIPv6` IP6 (m1,m2,m3,m4) = IP6 (a1.&.m1,a2.&.m2,a3.&.m3,a4.&.m4)

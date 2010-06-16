@@ -125,12 +125,10 @@ parseIPv6 cs = case runParser ip6 cs of
 --
 
 dig :: Parser Int
-dig = do { char '0'; return 0 } <|>
-      do n <- oneOf ['1'..'9']
-         ns <- many digit
-         let ms = map digitToInt (n:ns)
-             ret = foldl' (\x y -> x * 10 + y) 0 ms
-         return ret
+dig = 0 <$ char '0'
+  <|> toInt <$> oneOf ['1'..'9'] <*> many digit
+  where
+    toInt n ns = foldl' (\x y -> x * 10 + y) 0 . map digitToInt $ n : ns
 
 ip4 :: Parser IPv4
 ip4 = do
@@ -138,9 +136,9 @@ ip4 = do
     check as
     return $ toIPv4 as
   where
-    test errmsg adr = when (adr < 0 || 255 < adr) (error errmsg)
+    test errmsg adr = when (adr < 0 || 255 < adr) (fail errmsg)
     check as = do let errmsg = "IPv4 adddress"
-                  when (length as /= 4) (error errmsg)
+                  when (length as /= 4) (fail errmsg)
                   mapM_ (test errmsg) as
 
 ----------------------------------------------------------------
@@ -155,12 +153,10 @@ hex = do ns <- some hexDigit
              val = foldl' (\x y -> x * 16 + y) 0 ms
          return val
     where
-      check ns = when (length ns > 4) (error "IPv6 address -- more than 4 hex")
+      check ns = when (length ns > 4) (fail "IPv6 address -- more than 4 hex")
 
 ip6 :: Parser IPv6
-ip6 = do
-    as <- ip6'
-    return $ toIPv6 as
+ip6 = toIPv6 <$> ip6'
 
 ip6' :: Parser [Int]
 ip6' =      do colon2
@@ -175,14 +171,13 @@ ip6' =      do colon2
     where
       colon2 = string "::"
       hexcolon = hex `sepBy1` char ':'
-      hexcolon2 = manyTill (do{ b <- hex; char ':'; return b }) (char ':')
+      hexcolon2 = manyTill (hex <* char ':') (char ':')
       format bs1 bs2 = do let len1 = length bs1
                               len2 = length bs2
-                          when (len1 > 7) (error "IPv6 address")
-                          when (len2 > 7) (error "IPv6 address")
+                          when (len1 > 7) (fail "IPv6 address1")
+                          when (len2 > 7) (fail "IPv6 address2")
                           let len = 8 - len1 - len2
-                          when (len <= 0) (error "IPv6 address")
+                          when (len <= 0) (fail "IPv6 address3")
                           let spring = replicate len 0
                           return $ bs1 ++ spring ++ bs2
-      check bs = when (length bs /= 8) (error "IPv6 address")
-
+      check bs = when (length bs /= 8) (fail "IPv6 address4")
