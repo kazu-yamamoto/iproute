@@ -1,11 +1,12 @@
 module Data.IP.Addr where
 
 import Control.Monad
+import Control.Applicative
 import Data.Bits
 import Data.Char
 import Data.List (foldl')
 import Data.Word
-import Parsec
+import Text.Appar.String
 import Text.Printf
 
 ----------------------------------------------------------------
@@ -109,19 +110,14 @@ instance Read IPv6 where
     readsPrec _ = parseIPv6
 
 parseIPv4 :: String -> [(IPv4,String)]
-parseIPv4 cs = case parse (adopt ip4) "parseIPv4" cs of
-                 Right a4 -> a4
-                 Left  _  -> error "parseIPv4"
+parseIPv4 cs = case runParser ip4 cs of
+    (Nothing,_)    -> error "parseIPv4"
+    (Just a4,rest) -> [(a4,rest)]
 
 parseIPv6 :: String -> [(IPv6,String)]
-parseIPv6 cs = case parse (adopt ip6) "parseIPv6" cs of
-                 Right a6 -> a6
-                 Left  _  -> error "parseIPv6"
-
-adopt :: Parser a -> Parser [(a,String)]
-adopt p = do x <- p
-             rest <- getInput
-             return [(x, rest)]
+parseIPv6 cs = case runParser ip6 cs of
+    (Nothing,_)    -> error "parseIPv6"
+    (Just a6,rest) -> [(a6,rest)]
 
 ----------------------------------------------------------------
 --
@@ -142,9 +138,9 @@ ip4 = do
     check as
     return $ toIPv4 as
   where
-    test errmsg adr = when (adr < 0 || 255 < adr) (unexpected errmsg)
+    test errmsg adr = when (adr < 0 || 255 < adr) (error errmsg)
     check as = do let errmsg = "IPv4 adddress"
-                  when (length as /= 4) (unexpected errmsg)
+                  when (length as /= 4) (error errmsg)
                   mapM_ (test errmsg) as
 
 ----------------------------------------------------------------
@@ -153,13 +149,13 @@ ip4 = do
 --
 
 hex :: Parser Int
-hex = do ns <- many1 hexDigit
+hex = do ns <- some hexDigit
          check ns
          let ms = map digitToInt ns
              val = foldl' (\x y -> x * 16 + y) 0 ms
          return val
     where
-      check ns = when (length ns > 4) (unexpected "IPv6 address -- more than 4 hex")
+      check ns = when (length ns > 4) (error "IPv6 address -- more than 4 hex")
 
 ip6 :: Parser IPv6
 ip6 = do
@@ -182,11 +178,11 @@ ip6' =      do colon2
       hexcolon2 = manyTill (do{ b <- hex; char ':'; return b }) (char ':')
       format bs1 bs2 = do let len1 = length bs1
                               len2 = length bs2
-                          when (len1 > 7) (unexpected "IPv6 address")
-                          when (len2 > 7) (unexpected "IPv6 address")
+                          when (len1 > 7) (error "IPv6 address")
+                          when (len2 > 7) (error "IPv6 address")
                           let len = 8 - len1 - len2
-                          when (len <= 0) (unexpected "IPv6 address")
+                          when (len <= 0) (error "IPv6 address")
                           let spring = replicate len 0
                           return $ bs1 ++ spring ++ bs2
-      check bs = when (length bs /= 8) (unexpected "IPv6 address")
+      check bs = when (length bs /= 8) (error "IPv6 address")
 

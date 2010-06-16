@@ -5,7 +5,7 @@ import Data.Bits
 import Control.Monad
 import Data.IP.Addr
 import Data.IP.Mask
-import Parsec
+import Text.Appar.String
 
 ----------------------------------------------------------------
 
@@ -59,15 +59,14 @@ instance Read (AddrRange IPv6) where
     readsPrec _ = parseIPv6Range
 
 parseIPv4Range :: String -> [(AddrRange IPv4,String)]
-parseIPv4Range cs = case parse (adopt ip4range) "parseIPv4" cs of
-                      Right r4 -> r4
-                      Left  _  -> error "parseIPv4"
+parseIPv4Range cs = case runParser ip4range cs of
+    (Nothing,_)    -> error "parseIPv4Range"
+    (Just a4,rest) -> [(a4,rest)]
 
 parseIPv6Range :: String -> [(AddrRange IPv6,String)]
-parseIPv6Range cs = case parse (adopt ip6range) "parseIPv6" cs of
-                      Right r6 -> r6
-                      Left  _  -> error "parseIPv6"
-
+parseIPv6Range cs = case runParser ip6range cs of
+    (Nothing,_)    -> error "parseIPv6Range"
+    (Just a6,rest) -> [(a6,rest)]
 
 ip4range :: Parser (AddrRange IPv4)
 ip4range = do
@@ -78,7 +77,7 @@ ip4range = do
         adr = ip `maskedIPv4` msk
     return $ AddrRange adr msk len
   where
-    check len = when (len < 0 || 32 < len) (unexpected "IPv4 mask length")
+    check len = when (len < 0 || 32 < len) (error "IPv4 mask length")
 
 maskedIPv4 :: IPv4 -> IPv4 -> IPv4
 IP4 a `maskedIPv4` IP4 m = IP4 (a .&. m)
@@ -92,7 +91,7 @@ ip6range = do
         adr = ip `maskedIPv6` msk
     return $ AddrRange adr msk len
   where
-    check len = when (len < 0 || 128 < len) (unexpected ("IPv6 mask length: " ++ show len))
+    check len = when (len < 0 || 128 < len) (error ("IPv6 mask length: " ++ show len))
 
 maskedIPv6 :: IPv6 -> IPv6 -> IPv6
 IP6 (a1,a2,a3,a4) `maskedIPv6` IP6 (m1,m2,m3,m4) = IP6 (a1.&.m1,a2.&.m2,a3.&.m3,a4.&.m4)
