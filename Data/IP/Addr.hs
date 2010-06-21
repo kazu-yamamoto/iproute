@@ -111,12 +111,12 @@ instance Read IPv6 where
 
 parseIPv4 :: String -> [(IPv4,String)]
 parseIPv4 cs = case runParser ip4 cs of
-    (Nothing,_)    -> error "parseIPv4"
+    (Nothing,_)    -> error $ "parseIPv4 " ++ cs
     (Just a4,rest) -> [(a4,rest)]
 
 parseIPv6 :: String -> [(IPv6,String)]
 parseIPv6 cs = case runParser ip6 cs of
-    (Nothing,_)    -> error "parseIPv6"
+    (Nothing,_)    -> error $ "parseIPv6 " ++ cs
     (Just a6,rest) -> [(a6,rest)]
 
 ----------------------------------------------------------------
