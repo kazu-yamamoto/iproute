@@ -83,7 +83,7 @@ intToTBitsIPv6 = IM.fromList $ zip [0..128] bs
 -}
 data IPRTable k a =
     Nil
-  | Node !(AddrRange k) !k !(Maybe a) !(IPRTable k a) !(IPRTable k a)
+  | Node !(AddrRange k) !k !(Maybe a) (IPRTable k a) (IPRTable k a)
   deriving (Eq, Show)
 
 ----------------------------------------------------------------
