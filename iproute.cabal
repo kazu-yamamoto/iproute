@@ -17,9 +17,9 @@ Build-Type:             Simple
 Extra-Source-Files:     test/Tests.hs test/IPv4Search.hs test/Makefile
 library
   if impl(ghc >= 6.12)
-    GHC-Options:        -Wall -O2 -fno-warn-unused-do-bind
+    GHC-Options:        -Wall -fno-warn-unused-do-bind
   else
-    GHC-Options:        -Wall -O2
+    GHC-Options:        -Wall
   Exposed-Modules:      Data.IP
                         Data.IP.RouteTable
   Other-Modules:        Data.IP.Addr
