@@ -1,5 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
-
 {-|
   IP routing table is a tree of 'AddrRange'
   to search one of them on the longest
