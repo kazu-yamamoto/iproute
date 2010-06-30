@@ -9,8 +9,13 @@
       <http://www.mew.org/~kazu/proj/iproute/>
 -}
 module Data.IP.RouteTable (
+  -- * Documentation
+  -- ** Routable class
     Routable (..)
-  , IPRTable, empty, insert
+  -- ** Type for IP routing table
+  , IPRTable
+  -- ** Functions to manipulate an IP routing table
+  , empty, insert
   , Data.IP.RouteTable.Internal.lookup
   , fromList, toList
   ) where
