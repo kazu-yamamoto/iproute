@@ -1,7 +1,6 @@
 module Data.IP.Addr where
 
 import Control.Monad
-import Control.Applicative
 import Data.Bits
 import Data.Char
 import Data.List (foldl')
