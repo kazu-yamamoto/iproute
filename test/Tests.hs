@@ -26,10 +26,20 @@ tests = [ testGroup "Property Test" [
              , testProperty "Sort IPv6" prop_sort_ipv6
              , testProperty "FromTo IPv4" prop_fromto_ipv4
              , testProperty "FromTo IPv6" prop_fromto_ipv6
+             , testProperty "Insert lookup IPv4" prop_insert_lookup_ipv4
+             , testProperty "Insert lookup IPv6" prop_insert_lookup_ipv6
              , testProperty "Search IPv4" prop_search_ipv4
              , testProperty "Search IPv6" prop_search_ipv6
              , testProperty "Ord IPv4" prop_ord_ipv4
              , testProperty "Ord IPv6" prop_ord_ipv6
+             , testProperty "Delete IPv4" prop_delete_ipv4
+             , testProperty "Delete IPv6" prop_delete_ipv6
+             , testProperty "Insert delete IPv4" prop_insert_delete_ipv4
+             , testProperty "Insert delete IPv6" prop_insert_delete_ipv6
+             , testProperty "Delete insert IPv4" prop_delete_insert_ipv4
+             , testProperty "Delete insert IPv6" prop_delete_insert_ipv6
+             , testProperty "Delete lookup IPv4" prop_delete_lookup_ipv4
+             , testProperty "Delete lookup IPv6" prop_delete_lookup_ipv6
              ]
         , testGroup "Test case for routing table" [
                testCase "fromto IPv4" test_fromto_ipv4
@@ -90,8 +100,9 @@ prop_sort_ipv6 :: [AddrRange IPv6] -> Bool
 prop_sort_ipv6 = sort_ip
 
 sort_ip :: (Routable a, Ord a) => [AddrRange a] -> Bool
-sort_ip xs = fromList (zip xs xs) == let xs' = sort xs
-                                     in fromList (zip xs' xs')
+sort_ip xs = fromList (zip xs xs) == fromList (zip xs' xs')
+  where
+    xs' = sort xs
 
 ----------------------------------------------------------------
 
@@ -102,8 +113,9 @@ prop_fromto_ipv6 :: [AddrRange IPv6] -> Bool
 prop_fromto_ipv6 = fromto_ip
 
 fromto_ip :: (Routable a, Ord a) => [AddrRange a] -> Bool
-fromto_ip xs = let ys = map fst $ toList $ fromList (zip xs xs)
-               in nub (sort xs) == nub (sort ys)
+fromto_ip xs = nub (sort xs) == nub (sort ys)
+  where
+   ys = map fst . toList . fromList $ zip xs xs
 
 ----------------------------------------------------------------
 
@@ -114,7 +126,7 @@ prop_ord_ipv6 :: [AddrRange IPv6] -> Bool
 prop_ord_ipv6 = ord_ip
 
 ord_ip :: Routable a => [AddrRange a] -> Bool
-ord_ip xs = isOrdered (fromList (zip xs xs))
+ord_ip xs = isOrdered . fromList $ zip xs xs
 
 isOrdered :: Routable k => IPRTable k a -> Bool
 isOrdered = foldt (\x v -> v && ordered x) True
@@ -127,6 +139,18 @@ ordered (Node k _ _ l r) = ordered' k l && ordered' k r
     ordered' k1 (Node k2 _ _ _ _) = k1 >:> k2
 
 ----------------------------------------------------------------
+
+prop_insert_lookup_ipv4 :: AddrRange IPv4 -> [AddrRange IPv4] -> Bool
+prop_insert_lookup_ipv4 = insert_lookup_ip
+
+prop_insert_lookup_ipv6 :: AddrRange IPv6 -> [AddrRange IPv6] -> Bool
+prop_insert_lookup_ipv6 = insert_lookup_ip
+
+insert_lookup_ip :: Routable a => AddrRange a -> [AddrRange a] -> Bool
+insert_lookup_ip k xs = lookup k (insert k k t) == Just k
+  where
+    rs = zip xs xs
+    t = fromList rs
 
 prop_search_ipv4 :: AddrRange IPv4 -> [AddrRange IPv4] -> Bool
 prop_search_ipv4 = search_ip
@@ -149,6 +173,61 @@ linear = linear' Nothing
                         then linear' (Just x) k xs
                         else linear' (Just a) k xs
           | otherwise = linear' (Just a) k xs
+
+----------------------------------------------------------------
+
+prop_delete_ipv4 :: [AddrRange IPv6] -> Property
+prop_delete_ipv4 = delete_ip
+
+prop_delete_ipv6 :: [AddrRange IPv6] -> Property
+prop_delete_ipv6 = delete_ip
+
+delete_ip :: Routable a => [AddrRange a] -> Property
+delete_ip xs = xs /= [] ==> isOrdered (delete i t)
+  where
+    rs = zip xs xs
+    t = fromList rs
+    i = head xs
+
+prop_insert_delete_ipv4 :: AddrRange IPv4 -> [AddrRange IPv4] -> Property
+prop_insert_delete_ipv4 = insert_delete_ip
+
+prop_insert_delete_ipv6 :: AddrRange IPv6 -> [AddrRange IPv6] -> Property
+prop_insert_delete_ipv6 = insert_delete_ip
+
+insert_delete_ip :: Routable a => AddrRange a -> [AddrRange a] -> Property
+insert_delete_ip k xs = lookup k t == Nothing ==> delete k (insert k k t) == t
+  where
+    rs = zip xs xs
+    t = fromList rs
+
+prop_delete_insert_ipv4 :: [AddrRange IPv4] -> Property
+prop_delete_insert_ipv4 = delete_insert_ip
+
+prop_delete_insert_ipv6 :: [AddrRange IPv6] -> Property
+prop_delete_insert_ipv6 = delete_insert_ip
+
+delete_insert_ip :: Routable a => [AddrRange a] -> Property
+delete_insert_ip xs = xs /= [] ==> insert k k (delete k t) == t
+  where
+    rs = zip xs xs
+    t = fromList rs
+    k = head xs
+
+prop_delete_lookup_ipv4 :: [AddrRange IPv4] -> Property
+prop_delete_lookup_ipv4 = delete_lookup_ip
+
+prop_delete_lookup_ipv6 :: [AddrRange IPv6] -> Property
+prop_delete_lookup_ipv6 = delete_lookup_ip
+
+delete_lookup_ip :: Routable a => [AddrRange a] -> Property
+delete_lookup_ip xs = xs /= [] ==> case lookup k (delete k t) of
+    Nothing -> True
+    Just r  -> r /= k && r >:> k
+  where
+    rs = zip xs xs
+    t = fromList rs
+    k = head xs
 
 ----------------------------------------------------------------
 

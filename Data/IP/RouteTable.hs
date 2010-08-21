@@ -15,7 +15,7 @@ module Data.IP.RouteTable (
   -- ** Type for IP routing table
   , IPRTable
   -- ** Functions to manipulate an IP routing table
-  , empty, insert
+  , empty, insert, delete
   , Data.IP.RouteTable.Internal.lookup
   , fromList, toList
   ) where

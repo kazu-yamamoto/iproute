@@ -140,6 +140,26 @@ isLeft adr = isZero (addr adr)
 ----------------------------------------------------------------
 
 {-|
+  The 'delete' function deletes a value by a key of 'AddrRange' from 'IPRTable'
+  and returns a new 'IPRTable'.
+-}
+delete :: (Routable k) => AddrRange k -> IPRTable k a -> IPRTable k a
+delete _ Nil = Nil
+delete k1 s@(Node k2 tb2 v2 l r)
+  | k1 == k2  = node k2 tb2 Nothing l r
+  | k2 >:> k1 = if isLeft k1 tb2
+                then node k2 tb2 v2 (delete k1 l) r
+                else node k2 tb2 v2 l (delete k1 r)
+  | otherwise = s
+
+node :: (Routable k) => AddrRange k -> k -> (Maybe a) -> IPRTable k a -> IPRTable k a -> IPRTable k a
+node _ _ Nothing Nil r = r
+node _ _ Nothing l Nil = l
+node k tb v      l   r = Node k tb v l r
+
+----------------------------------------------------------------
+
+{-|
   The 'lookup' function looks up 'IPRTable' with a key of 'AddrRange'
   and returns its value if exists.
 -}
