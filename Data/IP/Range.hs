@@ -15,7 +15,7 @@ import Text.Appar.String
 
 data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
              | IPv6Range { ipv6range :: AddrRange IPv6 }
-             deriving (Eq,Show)
+             deriving (Eq)
 
 ----------------------------------------------------------------
 --
@@ -47,10 +47,25 @@ data AddrRange a = AddrRange {
 instance Show a => Show (AddrRange a) where
     show x = show (addr x) ++ "/" ++ show (mlen x)
 
+instance Show IPRange where
+    show (IPv4Range ip) = show ip
+    show (IPv6Range ip) = show ip
+
 ----------------------------------------------------------------
 --
 -- Read
 --
+
+instance Read IPRange where
+  readsPrec _ = parseIPRange
+  
+parseIPRange :: String -> [(IPRange,String)]
+parseIPRange cs = 
+  case runParser ip4range cs of
+       (Just ip,rest) -> [(IPv4Range ip,rest)]
+       (Nothing,_) -> case runParser ip6range cs of
+                           (Just ip,rest) -> [(IPv6Range ip,rest)]
+                           (Nothing,_) -> error $ "parseIPRange" ++ cs
 
 instance Read (AddrRange IPv4) where
     readsPrec _ = parseIPv4Range
