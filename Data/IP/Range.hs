@@ -11,6 +11,7 @@ import Text.Appar.String
 
 {-|
   A unified data for 'AddrRange' 'IPv4' and 'AddrRange' 'IPv6'.
+  To create this, use 'read' \"192.0.2.0/24\" :: 'IPRange'.
 -}
 
 data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
@@ -28,7 +29,7 @@ data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
   are essentially same information but contained for pre
   calculation.
 
-  To create this, use 'makeAddrRange' or 'read' \"192.0.2.0/24\" :: 'AddrRange' 'IPv4'
+  To create this, use 'makeAddrRange' or 'read' \"192.0.2.0/24\" :: 'AddrRange' 'IPv4'.
 -}
 data AddrRange a = AddrRange {
         -- |The 'addr' function returns an address from 'AddrRange'.
