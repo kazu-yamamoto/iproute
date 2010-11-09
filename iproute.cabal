@@ -1,5 +1,5 @@
 Name:                   iproute
-Version:                1.1.0
+Version:                1.2.0
 Author:                 Kazu Yamamoto <kazu@iij.ad.jp>
 Maintainer:             Kazu Yamamoto <kazu@iij.ad.jp>
 License:                BSD3
@@ -31,4 +31,3 @@ library
 Source-Repository head
   Type:                 git
   Location:             git://github.com/kazu-yamamoto/iproute.git
-
