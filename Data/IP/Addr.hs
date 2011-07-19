@@ -4,6 +4,7 @@ import Control.Monad
 import Data.Bits
 import Data.Char
 import Data.List (foldl')
+import Data.String
 import Data.Word
 import Text.Appar.String
 import Text.Printf
@@ -30,13 +31,13 @@ type IPv6Addr = (Word32,Word32,Word32,Word32)
 
 {-|
   The abstract data structure to express an IPv4 address.
-  To create this, use 'toIPv4'. Or use 'read' @\"192.0.2.1\"@ :: 'IPv4', for example.
+  To create this, use 'toIPv4'. Or use 'read' @\"192.0.2.1\"@ :: 'IPv4', for example. Or use @\"192.0.2.1\"@ with OverloadedStrings.
 -}
 newtype IPv4 = IP4 IPv4Addr deriving (Eq, Ord)
 
 {-|
   The abstract data structure to express an IPv6 address.
-  To create this, use 'toIPv6'. Or use 'read' @\"2001:DB8::1\"@ :: 'IPv6', for example.
+  To create this, use 'toIPv6'. Or use 'read' @\"2001:DB8::1\"@ :: 'IPv6', for example. Or use  @\"2001:DB8::1\"@ with OverloadedStrings.
 -}
 newtype IPv6 = IP6 IPv6Addr deriving (Eq, Ord)
 
@@ -107,6 +108,12 @@ instance Read IPv4 where
 
 instance Read IPv6 where
     readsPrec _ = parseIPv6
+
+instance IsString IPv4 where
+    fromString = read
+
+instance IsString IPv6 where
+    fromString = read
 
 parseIPv4 :: String -> [(IPv4,String)]
 parseIPv4 cs = case runParser ip4 cs of
