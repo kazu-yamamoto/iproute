@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, OverloadedStrings #-}
 
 module Tests where
 
@@ -49,10 +49,14 @@ tests = [ testGroup "Property Test" [
         , testGroup "Test case for IP" [
                testCase "toIPv4" test_toIPv4
              , testCase "toIPv6" test_toIPv6
+             , testCase "read IP" test_read_IP
+             , testCase "read IP 2" test_read_IP_2
              , testCase "read IPv4" test_read_IPv4
              , testCase "read IPv6" test_read_IPv6
              , testCase "read IPv6 2" test_read_IPv6_2
-             , testCase "read IPv4 range" test_read_IPv4_range
+             , testCase "read IP range" test_read_IP_range
+             , testCase "read IP range 2" test_read_IP_range_2
+             , testCase "read IPv6 range" test_read_IPv6_range
              , testCase "read IPv6 range" test_read_IPv6_range
              , testCase "makeAddrRange IPv4" test_makeAddrRange_IPv4
              , testCase "makeAddrRange IPv6" test_makeAddrRange_IPv6
@@ -237,6 +241,12 @@ test_toIPv4 = show (toIPv4 [192,0,2,1]) @?= "192.0.2.1"
 test_toIPv6 :: Assertion
 test_toIPv6 = show (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) @?= "2001:db8:00:00:00:00:00:01"
 
+test_read_IP :: Assertion
+test_read_IP = (read "192.0.2.1" :: IP) @?= IPv4 (read "192.0.2.1" :: IPv4)
+
+test_read_IP_2 :: Assertion
+test_read_IP_2 = (read "2001:db8:00:00:00:00:00:01" :: IP) @?= IPv6 (read "2001:db8:00:00:00:00:00:01" :: IPv6)
+
 test_read_IPv4 :: Assertion
 test_read_IPv4 = show (read "192.0.2.1" :: IPv4) @?= "192.0.2.1"
 
@@ -245,6 +255,14 @@ test_read_IPv6 = show (read "2001:db8:00:00:00:00:00:01" :: IPv6) @?= "2001:db8:
 
 test_read_IPv6_2 :: Assertion
 test_read_IPv6_2 = show (read "2001:240:11e:c00::101" :: IPv6) @?= "2001:240:11e:c00:00:00:00:101"
+
+test_read_IP_range :: Assertion
+test_read_IP_range = (read "192.0.2.1/24" :: IPRange) 
+                 @?= IPv4Range (read "192.0.2.0/24" :: AddrRange IPv4)
+
+test_read_IP_range_2 :: Assertion
+test_read_IP_range_2 = (read "2001:db8:00:00:00:00:00:01/48" :: IPRange)
+                   @?= IPv6Range (read "2001:db8:00:00:00:00:00:01/48" :: AddrRange IPv6)
 
 test_read_IPv4_range :: Assertion
 test_read_IPv4_range = show (read "192.0.2.1/24" :: AddrRange IPv4) @?= "192.0.2.0/24"
@@ -292,11 +310,11 @@ test_isMatchedTo_IPv6_2 = toIPv6 [0x2001,0xDB8,0,0,0,0,0,0] `isMatchedTo` makeAd
 
 ipv4_list :: [AddrRange IPv4]
 ipv4_list = [
-    read "0.0.0.0/0"
-  , read "133.4.0.0/16"
-  , read "133.5.0.0/16"
-  , read "133.5.16.0/24"
-  , read "133.5.23.0/24"
+    "0.0.0.0/0"
+  , "133.4.0.0/16"
+  , "133.5.0.0/16"
+  , "133.5.16.0/24"
+  , "133.5.23.0/24"
   ]
 
 test_fromto_ipv4 :: Assertion
@@ -307,24 +325,26 @@ test_fromto_ipv4 = (sort . toList . fromList $ pairs) @?= pairs
 test_lookup_ipv4 :: Assertion
 test_lookup_ipv4 = do
     let rt = fromList pairs
-    lookup (read "127.0.0.1") rt @?= Just (read "0.0.0.0/0")
-    lookup (read "133.3.0.1") rt @?= Just (read "0.0.0.0/0")
-    lookup (read "133.4.0.0") rt @?= Just (read "133.4.0.0/16")
-    lookup (read "133.4.0.1") rt @?= Just (read "133.4.0.0/16")
-    lookup (read "133.5.16.0") rt @?= Just (read "133.5.16.0/24")
-    lookup (read "133.5.16.1") rt @?= Just (read "133.5.16.0/24")
+    lookup "127.0.0.1" rt @?= Just "0.0.0.0/0"
+    lookup "133.3.0.1" rt @?= Just "0.0.0.0/0"
+    lookup "133.4.0.0" rt @?= Just "133.4.0.0/16"
+    lookup "133.4.0.1" rt @?= Just "133.4.0.0/16"
+    lookup "133.5.16.0" rt @?= Just "133.5.16.0/24"
+    lookup "133.5.16.1" rt @?= Just "133.5.16.0/24"
   where
     pairs = zip ipv4_list ipv4_list
 
 test_lookup_ipv4_2 :: Assertion
 test_lookup_ipv4_2 = do
     let rt = fromList pairs
-    lookup (read "127.0.0.1") rt @?= Nothing
-    lookup (read "133.3.0.1") rt @?= Nothing
-    lookup (read "133.4.0.0") rt @?= Just (read "133.4.0.0/16")
-    lookup (read "133.4.0.1") rt @?= Just (read "133.4.0.0/16")
-    lookup (read "133.5.16.0") rt @?= Just (read "133.5.16.0/24")
-    lookup (read "133.5.16.1") rt @?= Just (read "133.5.16.0/24")
+    lookup "127.0.0.1" rt @?= Nothing
+    lookup "133.3.0.1" rt @?= Nothing
+    lookup "133.4.0.0" rt @?= Just "133.4.0.0/16"
+    lookup "133.4.0.1" rt @?= Just "133.4.0.0/16"
+    lookup "133.5.16.0" rt @?= Just "133.5.16.0/24"
+    lookup "133.5.16.1" rt @?= Just "133.5.16.0/24"
   where
     ipv4_list' = tail ipv4_list
     pairs = zip ipv4_list' ipv4_list'
+
+----------------------------------------------------------------

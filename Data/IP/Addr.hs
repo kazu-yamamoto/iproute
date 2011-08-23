@@ -13,6 +13,7 @@ import Text.Printf
 
 {-|
   A unified IP data for 'IPv4' and 'IPv6'.
+  To create this, use the data constructors. Or use 'read' @"192.0.2.1"@ :: 'IP', for example. Also, @"192.0.2.1"@ can be used as literal with OverloadedStrings. 
 -}
 
 data IP = IPv4 { ipv4 :: IPv4 }
@@ -31,13 +32,13 @@ type IPv6Addr = (Word32,Word32,Word32,Word32)
 
 {-|
   The abstract data structure to express an IPv4 address.
-  To create this, use 'toIPv4'. Or use 'read' @\"192.0.2.1\"@ :: 'IPv4', for example. Or use @\"192.0.2.1\"@ with OverloadedStrings.
+  To create this, use 'toIPv4'. Or use 'read' @\"192.0.2.1\"@ :: 'IPv4', for example. Also, @\"192.0.2.1\"@ can be used as literal with OverloadedStrings.
 -}
 newtype IPv4 = IP4 IPv4Addr deriving (Eq, Ord)
 
 {-|
   The abstract data structure to express an IPv6 address.
-  To create this, use 'toIPv6'. Or use 'read' @\"2001:DB8::1\"@ :: 'IPv6', for example. Or use  @\"2001:DB8::1\"@ with OverloadedStrings.
+  To create this, use 'toIPv6'. Or use 'read' @\"2001:DB8::1\"@ :: 'IPv6', for example. Also, @\"2001:DB8::1\"@ can be used as literal with OverloadedStrings.
 -}
 newtype IPv6 = IP6 IPv6Addr deriving (Eq, Ord)
 
@@ -103,17 +104,22 @@ toIPv6 ad = let [x1,x2,x3,x4] = map toWord32 $ split2 ad
 -- Read
 --
 
+instance Read IP where
+    readsPrec _ = parseIP
+
 instance Read IPv4 where
     readsPrec _ = parseIPv4
 
 instance Read IPv6 where
     readsPrec _ = parseIPv6
 
-instance IsString IPv4 where
-    fromString = read
-
-instance IsString IPv6 where
-    fromString = read
+parseIP :: String -> [(IP,String)]
+parseIP cs =
+  case runParser ip4 cs of
+       (Just ip,rest) -> [(IPv4 ip,rest)]
+       (Nothing,_) -> case runParser ip6 cs of
+                           (Just ip,rest) -> [(IPv6 ip,rest)]
+                           (Nothing,_) -> error $ "parseIP" ++ cs
 
 parseIPv4 :: String -> [(IPv4,String)]
 parseIPv4 cs = case runParser ip4 cs of
@@ -124,6 +130,20 @@ parseIPv6 :: String -> [(IPv6,String)]
 parseIPv6 cs = case runParser ip6 cs of
     (Nothing,_)    -> error $ "parseIPv6 " ++ cs
     (Just a6,rest) -> [(a6,rest)]
+
+----------------------------------------------------------------
+--
+-- IsString
+--
+
+instance IsString IP where
+    fromString = read
+
+instance IsString IPv4 where
+    fromString = read
+
+instance IsString IPv6 where
+    fromString = read
 
 ----------------------------------------------------------------
 --

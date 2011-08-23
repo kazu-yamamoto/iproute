@@ -1,10 +1,11 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Data.IP.Range where
 
-import Data.Bits
 import Control.Monad
+import Data.Bits
 import Data.IP.Addr
 import Data.IP.Mask
+import Data.String
 import Text.Appar.String
 
 ----------------------------------------------------------------
@@ -12,6 +13,7 @@ import Text.Appar.String
 {-|
   A unified data for 'AddrRange' 'IPv4' and 'AddrRange' 'IPv6'.
   To create this, use 'read' \"192.0.2.0/24\" :: 'IPRange'.
+  Also, \"192.0.2.0/24\" can be used as literal with OverloadedStrings.
 -}
 
 data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
@@ -30,6 +32,7 @@ data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
   calculation.
 
   To create this, use 'makeAddrRange' or 'read' \"192.0.2.0/24\" :: 'AddrRange' 'IPv4'.
+  Also, \"192.0.2.0/24\" can be used as literal with OverloadedStrings.
 -}
 data AddrRange a = AddrRange {
         -- |The 'addr' function returns an address from 'AddrRange'.
@@ -58,7 +61,7 @@ instance Show IPRange where
 --
 
 instance Read IPRange where
-  readsPrec _ = parseIPRange
+    readsPrec _ = parseIPRange
   
 parseIPRange :: String -> [(IPRange,String)]
 parseIPRange cs = 
@@ -111,3 +114,17 @@ ip6range = do
 
 maskedIPv6 :: IPv6 -> IPv6 -> IPv6
 IP6 (a1,a2,a3,a4) `maskedIPv6` IP6 (m1,m2,m3,m4) = IP6 (a1.&.m1,a2.&.m2,a3.&.m3,a4.&.m4)
+
+----------------------------------------------------------------
+--
+-- IsString
+--
+
+instance IsString IPRange where
+    fromString = read
+
+instance IsString (AddrRange IPv4) where
+    fromString = read
+
+instance IsString (AddrRange IPv6) where
+    fromString = read
