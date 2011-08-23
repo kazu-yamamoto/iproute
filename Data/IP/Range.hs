@@ -62,9 +62,9 @@ instance Show IPRange where
 
 instance Read IPRange where
     readsPrec _ = parseIPRange
-  
+
 parseIPRange :: String -> [(IPRange,String)]
-parseIPRange cs = 
+parseIPRange cs =
   case runParser ip4range cs of
        (Just ip,rest) -> [(IPv4Range ip,rest)]
        (Nothing,_) -> case runParser ip6range cs of
