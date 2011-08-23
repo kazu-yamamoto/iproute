@@ -152,7 +152,7 @@ delete k1 s@(Node k2 tb2 v2 l r)
                 else node k2 tb2 v2 l (delete k1 r)
   | otherwise = s
 
-node :: (Routable k) => AddrRange k -> k -> (Maybe a) -> IPRTable k a -> IPRTable k a -> IPRTable k a
+node :: (Routable k) => AddrRange k -> k -> Maybe a -> IPRTable k a -> IPRTable k a -> IPRTable k a
 node _ _ Nothing Nil r = r
 node _ _ Nothing l Nil = l
 node k tb v      l   r = Node k tb v l r
