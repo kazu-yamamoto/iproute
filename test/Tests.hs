@@ -45,6 +45,7 @@ tests = [ testGroup "Property Test" [
                testCase "fromto IPv4" test_fromto_ipv4
              , testCase "lookup IPv4" test_lookup_ipv4
              , testCase "lookup2 IPv4" test_lookup_ipv4_2
+             , testCase "findMatch IPv4" test_findMatch_ipv4
              ]
         , testGroup "Test case for IP" [
                testCase "toIPv4" test_toIPv4
@@ -257,7 +258,7 @@ test_read_IPv6_2 :: Assertion
 test_read_IPv6_2 = show (read "2001:240:11e:c00::101" :: IPv6) @?= "2001:240:11e:c00:00:00:00:101"
 
 test_read_IP_range :: Assertion
-test_read_IP_range = (read "192.0.2.1/24" :: IPRange) 
+test_read_IP_range = (read "192.0.2.1/24" :: IPRange)
                  @?= IPv4Range (read "192.0.2.0/24" :: AddrRange IPv4)
 
 test_read_IP_range_2 :: Assertion
@@ -346,5 +347,32 @@ test_lookup_ipv4_2 = do
   where
     ipv4_list' = tail ipv4_list
     pairs = zip ipv4_list' ipv4_list'
+
+test_findMatch_ipv4 :: Assertion
+test_findMatch_ipv4 = do
+    let rt = fromList pairs
+    findMatch "127.0.0.1" rt @?= []
+    findMatch "133.5.23.0/23" rt @?= [("133.5.23.0/24","133.5.23.0/24")]
+    findMatch "133.5.0.0/16" rt @?= [
+        ("133.5.0.0/16","133.5.0.0/16")
+      , ("133.5.16.0/24","133.5.16.0/24")
+      , ("133.5.23.0/24","133.5.23.0/24")
+      ]
+    findMatch "133.4.0.0/16" rt @?= [("133.4.0.0/16", "133.4.0.0/16")]
+    findMatch "133.4.0.0/15" rt @?= [
+        ("133.4.0.0/16","133.4.0.0/16")
+      , ("133.5.0.0/16","133.5.0.0/16")
+      , ("133.5.16.0/24","133.5.16.0/24")
+      , ("133.5.23.0/24","133.5.23.0/24")
+      ]
+    findMatch "0.0.0.0/0" rt @?= [
+        ("0.0.0.0/0", "0.0.0.0/0")
+      , ("133.4.0.0/16", "133.4.0.0/16")
+      , ("133.5.0.0/16", "133.5.0.0/16")
+      , ("133.5.16.0/24", "133.5.16.0/24")
+      , ("133.5.23.0/24", "133.5.23.0/24")
+      ]
+  where
+    pairs = zip ipv4_list ipv4_list
 
 ----------------------------------------------------------------

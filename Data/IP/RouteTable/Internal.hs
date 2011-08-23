@@ -160,24 +160,9 @@ node k tb v      l   r = Node k tb v l r
 ----------------------------------------------------------------
 
 {-|
-  The 'subLookup' function looks up 'IPRTable' with a key of 'AddrRange'
-  and returns True if any of key's subnets are in IPRTable
--}
-subLookup :: Routable k => AddrRange k -> IPRTable k a -> Bool
-subLookup _ Nil = False
-subLookup k1 (Node k2 tb2 Nothing l r)
-    | k1 >:> k2 = True
-    | k2 >:> k1 = if isLeft k1 tb2
-                  then subLookup k1 l
-                  else subLookup k1 r
-    | otherwise = False
-subLookup _ k = True
-
-----------------------------------------------------------------
-
-{-|
-  The 'lookup' function looks up 'IPRTable' with a key of 'AddrRange'
-  and returns its value if exists.
+  The 'lookup' function looks up 'IPRTable' with a key of 'AddrRange'.
+  If a routing information in 'IPRTable' matches the key, its value
+  is returned.
 -}
 lookup :: Routable k => AddrRange k -> IPRTable k a -> Maybe a
 lookup k s = search k s Nothing
@@ -196,6 +181,41 @@ search k1 (Node k2 tb2 vl l r) res
                   then search k1 l vl
                   else search k1 r vl
     | otherwise = res
+
+----------------------------------------------------------------
+
+{-|
+  The 'findMatch' function looks up 'IPRTable' with a key of 'AddrRange'.
+  If the key matches routing informations in 'IPRTable', they are
+  returned.
+-}
+
+findMatch :: Routable k => AddrRange k -> IPRTable k a -> [(AddrRange k, a)]
+findMatch _ Nil = []
+findMatch k1 (Node k2 _ Nothing l r)
+    | k1 >:> k2 = findMatch k1 l ++ findMatch k1 r
+    | k2 >:> k1 = findMatch k1 l ++ findMatch k1 r
+    | otherwise = []
+findMatch k1 (Node k2 _ (Just vl) l r)
+    | k1 >:> k2 = [(k2, vl)] ++ findMatch k1 l ++ findMatch k1 r
+    | k2 >:> k1 = findMatch k1 l ++ findMatch k1 r
+    | otherwise = []
+
+----------------------------------------------------------------
+
+{-|
+  The 'subLookup' function looks up 'IPRTable' with a key of 'AddrRange'
+  and returns True if any of key's subnets are in IPRTable
+-}
+subLookup :: Routable k => AddrRange k -> IPRTable k a -> Bool
+subLookup _ Nil = False
+subLookup k1 (Node k2 tb2 Nothing l r)
+    | k1 >:> k2 = True
+    | k2 >:> k1 = if isLeft k1 tb2
+                  then subLookup k1 l
+                  else subLookup k1 r
+    | otherwise = False
+subLookup _ _   = True
 
 ----------------------------------------------------------------
 
