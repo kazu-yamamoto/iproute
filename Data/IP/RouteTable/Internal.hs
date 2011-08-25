@@ -7,6 +7,7 @@
 -}
 module Data.IP.RouteTable.Internal where
 
+import Control.Monad hiding (join)
 import Data.Bits
 import Data.IP.Addr
 import Data.IP.Op
@@ -190,16 +191,16 @@ search k1 (Node k2 tb2 vl l r) res
   returned.
 -}
 
-findMatch :: Routable k => AddrRange k -> IPRTable k a -> [(AddrRange k, a)]
-findMatch _ Nil = []
+findMatch :: MonadPlus m => Routable k => AddrRange k -> IPRTable k a -> m (AddrRange k, a)
+findMatch _ Nil = mzero
 findMatch k1 (Node k2 _ Nothing l r)
-    | k1 >:> k2 = findMatch k1 l ++ findMatch k1 r
-    | k2 >:> k1 = findMatch k1 l ++ findMatch k1 r
-    | otherwise = []
+    | k1 >:> k2 = findMatch k1 l `mplus` findMatch k1 r
+    | k2 >:> k1 = findMatch k1 l `mplus` findMatch k1 r
+    | otherwise = mzero
 findMatch k1 (Node k2 _ (Just vl) l r)
-    | k1 >:> k2 = [(k2, vl)] ++ findMatch k1 l ++ findMatch k1 r
-    | k2 >:> k1 = findMatch k1 l ++ findMatch k1 r
-    | otherwise = []
+    | k1 >:> k2 = return (k2, vl) `mplus` findMatch k1 l `mplus` findMatch k1 r
+    | k2 >:> k1 = findMatch k1 l `mplus` findMatch k1 r
+    | otherwise = mzero
 
 ----------------------------------------------------------------
 
