@@ -18,6 +18,7 @@ module Data.IP.RouteTable (
   , empty, insert, delete
   , I.lookup
   , findMatch
+  , subLookup
   , fromList, toList
   ) where
 
