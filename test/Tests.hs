@@ -40,6 +40,8 @@ tests = [ testGroup "Property Test" [
              , testProperty "Delete insert IPv6" prop_delete_insert_ipv6
              , testProperty "Delete lookup IPv4" prop_delete_lookup_ipv4
              , testProperty "Delete lookup IPv6" prop_delete_lookup_ipv6
+             , testProperty "Convert fromto [Int] IPv4" prop_convert_ipv4
+             , testProperty "Convert fromto [Int] IPv6" prop_convert_ipv6
              ]
         , testGroup "Test case for routing table" [
                testCase "fromto IPv4" test_fromto_ipv4
@@ -81,17 +83,27 @@ main = defaultMain tests
 --
 
 instance Arbitrary (AddrRange IPv4) where
-    arbitrary = arbitraryIP toIPv4 255 4 32
+    arbitrary = arbitraryIP arbitrary 32
 
 instance Arbitrary (AddrRange IPv6) where
-    arbitrary = arbitraryIP toIPv6 65535 8 128
+    arbitrary = arbitraryIP arbitrary 128
 
-arbitraryIP :: Routable a => ([Int] -> a) -> Int -> Int -> Int -> Gen (AddrRange a)
-arbitraryIP func width adrlen msklen = do
-  a <- replicateM adrlen (choose (0,width))
-  let adr = func a
-  len <- choose (0,msklen)
-  return $ makeAddrRange adr len
+instance Arbitrary IPv4 where
+    arbitrary = arbitraryAdr toIPv4 255 4
+
+instance Arbitrary IPv6 where
+    arbitrary = arbitraryAdr toIPv6 65535 8
+
+arbitraryAdr :: Routable a => ([Int] -> a) -> Int -> Int -> Gen a
+arbitraryAdr func width adrlen = do
+    a <- replicateM adrlen (choose (0, width))
+    return $ func a
+
+arbitraryIP :: Routable a => Gen a -> Int -> Gen (AddrRange a)
+arbitraryIP adrGen msklen = do
+    adr <- adrGen
+    len <- choose (0,msklen)
+    return $ makeAddrRange adr len
 
 ----------------------------------------------------------------
 --
@@ -233,6 +245,12 @@ delete_lookup_ip xs = xs /= [] ==> case lookup k (delete k t) of
     rs = zip xs xs
     t = fromList rs
     k = head xs
+
+prop_convert_ipv4 :: IPv4 -> Property
+prop_convert_ipv4 ip = True ==> (toIPv4 . fromIPv4) ip == ip
+
+prop_convert_ipv6 :: IPv6 -> Property
+prop_convert_ipv6 ip = True ==> (toIPv6 . fromIPv6) ip == ip
 
 ----------------------------------------------------------------
 
