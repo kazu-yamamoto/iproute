@@ -5,8 +5,8 @@ module Data.IP (
   -- * Documentation
   -- ** IP data
     IP (..)
-  , IPv4, toIPv4
-  , IPv6, toIPv6
+  , IPv4, toIPv4, fromIPv4
+  , IPv6, toIPv6, fromIPv6
   -- ** IP range data
   , IPRange (..)
   , AddrRange (addr, mask, mlen)

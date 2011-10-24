@@ -101,6 +101,26 @@ toIPv6 ad = let [x1,x2,x3,x4] = map toWord32 $ split2 ad
 
 ----------------------------------------------------------------
 --
+-- IPToInt
+--
+
+{-|
+  The 'fromIPv4' function convert 'IPv4' to a list of 'Int'.
+-}
+fromIPv4 :: IPv4 -> [Int]
+fromIPv4 (IP4 w) = map (\n -> fromEnum $ (w `shiftR` n) .&. 0xff) [0o30, 0o20, 0o10, 0o00]
+
+{-|
+  The 'toIPv6' function convert 'IPv6' to a list of 'Int'.
+-}
+fromIPv6 :: IPv6 -> [Int]
+fromIPv6 (IP6 (w1, w2, w3, w4)) = map fromEnum (concatMap split [w1,w2,w3,w4])
+  where
+    split :: Word32 -> [Word32]
+    split n = [n `shiftR` 0x10 .&. 0xffff, n .&. 0xffff]
+
+----------------------------------------------------------------
+--
 -- Read
 --
 
