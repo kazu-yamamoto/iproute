@@ -1,12 +1,13 @@
 {-# LANGUAGE FlexibleInstances, OverloadedStrings, TemplateHaskell #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Tests where
+module Main where
 
 ----------------------------------------------------------------
 --
 -- Tests for IP.RouteTable
 --
---    runghc -i.. Tests.hs
+--    runghc -i.. Test.hs
 --
 
 import Control.Monad
@@ -16,7 +17,7 @@ import Data.List (sort, nub)
 import Prelude hiding (lookup)
 import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2
-import Test.Framework.TH
+import Test.Framework.TH.Prime
 import Test.HUnit
 import Test.QuickCheck
 
