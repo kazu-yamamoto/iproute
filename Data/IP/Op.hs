@@ -40,13 +40,13 @@ instance Addr IPv6 where
   the first 'AddrRange' contains the second 'AddrRange'. Otherwise,
   it returns 'False'.
 
->>> makeAddrRange (toIPv4 [127,0,2,1]) 8 >:> makeAddrRange (toIPv4 [127,0,2,1]) 24
+>>> makeAddrRange ("127.0.2.1" :: IPv4) 8 >:> makeAddrRange "127.0.2.1" 24
 True
->>> makeAddrRange (toIPv4 [127,0,2,1]) 24 >:> makeAddrRange (toIPv4 [127,0,2,1]) 8
+>>> makeAddrRange ("127.0.2.1" :: IPv4) 24 >:> makeAddrRange "127.0.2.1" 8
 False
->>> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 16 >:> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 32
+>>> makeAddrRange ("2001:DB8::1" :: IPv6) 16 >:> makeAddrRange "2001:DB8::1" 32
 True
->>> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 32 >:> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 16
+>>> makeAddrRange ("2001:DB8::1" :: IPv6) 32 >:> makeAddrRange "2001:DB8::1" 16
 False
 -}
 (>:>) :: Addr a => AddrRange a -> AddrRange a -> Bool
@@ -56,13 +56,13 @@ a >:> b = mlen a <= mlen b && (addr b `masked` mask a) == addr a
   The 'toMatchedTo' function take an 'Addr' address and an 'AddrRange',
   and returns 'True' if the range contains the address.
 
->>> toIPv4 [127,0,2,0] `isMatchedTo` makeAddrRange (toIPv4 [127,0,2,1]) 24
+>>> ("127.0.2.0" :: IPv4) `isMatchedTo` makeAddrRange "127.0.2.1" 24
 True
->>> toIPv4 [127,0,2,0] `isMatchedTo` makeAddrRange (toIPv4 [127,0,2,1]) 32
+>>> ("127.0.2.0" :: IPv4) `isMatchedTo` makeAddrRange "127.0.2.1" 32
 False
->>> toIPv6 [0x2001,0xDB8,0,0,0,0,0,1] `isMatchedTo` makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 32
+>>> ("2001:DB8::1" :: IPv6) `isMatchedTo` makeAddrRange "2001:DB8::1" 32
 True
->>> toIPv6 [0x2001,0xDB8,0,0,0,0,0,0] `isMatchedTo` makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 128
+>>> ("2001:DB8::" :: IPv6) `isMatchedTo` makeAddrRange "2001:DB8::1" 128
 False
 -}
 

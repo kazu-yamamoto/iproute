@@ -77,7 +77,7 @@ intToTBitsIPv6 = IM.fromList $ zip [0..128] bs
 
 {-|
   The Tree structure for IP routing table based on TRIE with
-  one way branching removed. This is an abstracted data structure,
+  one way branching removed. This is an abstract data type,
   so you cannot touch its inside. Please use 'insert' or 'lookup', instead.
 -}
 data IPRTable k a =
@@ -98,6 +98,9 @@ empty = Nil
 {-|
   The 'insert' function inserts a value with a key of 'AddrRange' to 'IPRTable'
   and returns a new 'IPRTable'.
+
+>>> (insert ("127.0.0.1" :: AddrRange IPv4) () empty) == fromList [("127.0.0.1",())]
+True
 -}
 insert :: (Routable k) => AddrRange k -> a -> IPRTable k a -> IPRTable k a
 insert k1 v1 Nil = Node k1 tb1 (Just v1) Nil Nil
@@ -143,6 +146,9 @@ isLeft adr = isZero (addr adr)
 {-|
   The 'delete' function deletes a value by a key of 'AddrRange' from 'IPRTable'
   and returns a new 'IPRTable'.
+
+>>> delete "127.0.0.1" (insert ("127.0.0.1" :: AddrRange IPv4) () empty) == empty
+True
 -}
 delete :: (Routable k) => AddrRange k -> IPRTable k a -> IPRTable k a
 delete _ Nil = Nil
@@ -164,6 +170,21 @@ node k tb v      l   r = Node k tb v l r
   The 'lookup' function looks up 'IPRTable' with a key of 'AddrRange'.
   If a routing information in 'IPRTable' matches the key, its value
   is returned.
+
+>>> let v4 = ["133.4.0.0/16","133.5.0.0/16","133.5.16.0/24","133.5.23.0/24"] :: [AddrRange IPv4]
+>>> let rt = fromList $ zip v4 v4
+>>> lookup "127.0.0.1" rt
+Nothing
+>>> lookup "133.3.0.1" rt
+Nothing
+>>> lookup "133.4.0.0" rt
+Just 133.4.0.0/16
+>>> lookup "133.4.0.1" rt
+Just 133.4.0.0/16
+>>> lookup "133.5.16.0" rt
+Just 133.5.16.0/24
+>>> lookup "133.5.16.1" rt
+Just 133.5.16.0/24
 -}
 lookup :: Routable k => AddrRange k -> IPRTable k a -> Maybe a
 lookup k s = search k s Nothing
@@ -189,6 +210,11 @@ search k1 (Node k2 tb2 vl l r) res
   The 'findMatch' function looks up 'IPRTable' with a key of 'AddrRange'.
   If the key matches routing informations in 'IPRTable', they are
   returned.
+
+>>> let v4 = ["133.4.0.0/16","133.5.0.0/16","133.5.16.0/24","133.5.23.0/24"] :: [AddrRange IPv4]
+>>> let rt = fromList $ zip v4 $ repeat ()
+>>> findMatch "133.4.0.0/15" rt :: [(AddrRange IPv4,())]
+[(133.4.0.0/16,()),(133.5.0.0/16,()),(133.5.16.0/24,()),(133.5.23.0/24,())]
 -}
 
 findMatch :: MonadPlus m => Routable k => AddrRange k -> IPRTable k a -> m (AddrRange k, a)

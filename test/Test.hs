@@ -30,7 +30,7 @@ main = $(defaultMainGenerator)
 ----------------------------------------------------------------
 
 doc_test :: DocTests
-doc_test = docTest ["../Data/IP.hs"] ["-i.."]
+doc_test = docTest ["../Data/IP.hs", "../Data/IP/RouteTable.hs"] ["-i..", "-XOverloadedStrings"]
 
 ----------------------------------------------------------------
 --
@@ -234,19 +234,6 @@ case_lookup_ipv4 = do
     lookup "133.5.16.1" rt @?= Just "133.5.16.0/24"
   where
     pairs = zip ipv4_list ipv4_list
-
-case_lookup_ipv4_2 :: Assertion
-case_lookup_ipv4_2 = do
-    let rt = fromList pairs
-    lookup "127.0.0.1" rt @?= Nothing
-    lookup "133.3.0.1" rt @?= Nothing
-    lookup "133.4.0.0" rt @?= Just "133.4.0.0/16"
-    lookup "133.4.0.1" rt @?= Just "133.4.0.0/16"
-    lookup "133.5.16.0" rt @?= Just "133.5.16.0/24"
-    lookup "133.5.16.1" rt @?= Just "133.5.16.0/24"
-  where
-    ipv4_list' = tail ipv4_list
-    pairs = zip ipv4_list' ipv4_list'
 
 case_findMatch_ipv4 :: Assertion
 case_findMatch_ipv4 = do

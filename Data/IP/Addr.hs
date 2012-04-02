@@ -36,7 +36,7 @@ type IPv4Addr = Word32
 type IPv6Addr = (Word32,Word32,Word32,Word32)
 
 {-|
-  The abstract data structure to express an IPv4 address.
+  The abstract data type to express an IPv4 address.
   To create this, use 'toIPv4'. Or use 'read' @\"192.0.2.1\"@ :: 'IPv4', for example. Also, @\"192.0.2.1\"@ can be used as literal with OverloadedStrings.
 
 >>> read "192.0.2.1" :: IPv4
@@ -45,7 +45,7 @@ type IPv6Addr = (Word32,Word32,Word32,Word32)
 newtype IPv4 = IP4 IPv4Addr deriving (Eq, Ord)
 
 {-|
-  The abstract data structure to express an IPv6 address.
+  The abstract data type to express an IPv6 address.
   To create this, use 'toIPv6'. Or use 'read' @\"2001:DB8::1\"@ :: 'IPv6', for example. Also, @\"2001:DB8::1\"@ can be used as literal with OverloadedStrings.
 
 >>> read "2001:db8:00:00:00:00:00:01" :: IPv6
@@ -92,8 +92,8 @@ showIPv6 (IP6 (a1,a2,a3,a4)) = show6 a1 ++ ":" ++ show6 a2 ++ ":" ++ show6 a3 ++
 {-|
   The 'toIPv4' function takes a list of 'Int' and returns 'IPv4'.
 
->>> show (toIPv4 [192,0,2,1])
-"192.0.2.1"
+>>> toIPv4 [192,0,2,1]
+192.0.2.1
 -}
 toIPv4 :: [Int] -> IPv4
 toIPv4 = IP4 . toWord32
@@ -104,8 +104,8 @@ toIPv4 = IP4 . toWord32
 {-|
   The 'toIPv6' function takes a list of 'Int' and returns 'IPv6'.
 
->>> show (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1])
-"2001:db8:00:00:00:00:00:01"
+>>> toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]
+2001:db8:00:00:00:00:00:01
 -}
 toIPv6 :: [Int] -> IPv6
 toIPv6 ad = let [x1,x2,x3,x4] = map toWord32 $ split2 ad
