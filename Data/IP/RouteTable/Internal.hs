@@ -89,6 +89,9 @@ data IPRTable k a =
 
 {-|
   The 'empty' function returns an empty IP routing table.
+
+>>> (empty :: IPRTable IPv4 ()) == fromList []
+True
 -}
 empty :: Routable k => IPRTable k a
 empty = Nil
@@ -147,7 +150,7 @@ isLeft adr = isZero (addr adr)
   The 'delete' function deletes a value by a key of 'AddrRange' from 'IPRTable'
   and returns a new 'IPRTable'.
 
->>> delete "127.0.0.1" (insert ("127.0.0.1" :: AddrRange IPv4) () empty) == empty
+>>> delete "127.0.0.1" (insert "127.0.0.1" () empty) == (empty :: IPRTable IPv4 ())
 True
 -}
 delete :: (Routable k) => AddrRange k -> IPRTable k a -> IPRTable k a
