@@ -13,7 +13,7 @@ import Text.Printf
 
 {-|
   A unified IP data for 'IPv4' and 'IPv6'.
-  To create this, use the data constructors. Or use 'read' @"192.0.2.1"@ :: 'IP', for example. Also, @"192.0.2.1"@ can be used as literal with OverloadedStrings.
+  To create this, use the data constructors. Or use 'read' @\"192.0.2.1\"@ :: 'IP', for example. Also, @\"192.0.2.1\"@ can be used as literal with OverloadedStrings.
 -}
 
 data IP = IPv4 { ipv4 :: IPv4 }
