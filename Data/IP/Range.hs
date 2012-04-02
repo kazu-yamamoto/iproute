@@ -46,11 +46,11 @@ data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
 -}
 data AddrRange a = AddrRange {
         -- |The 'addr' function returns an address from 'AddrRange'.
-        addr :: a
+        addr :: !a
         -- |The 'mask' function returns a contiguous 'IP' mask from 'AddrRange'.
-      , mask :: a
+      , mask :: !a
         -- |The 'mlen' function returns a mask length from 'AddrRange'.
-      , mlen :: Int
+      , mlen :: {-# UNPACK #-} !Int
     } deriving (Eq, Ord)
 
 ----------------------------------------------------------------
