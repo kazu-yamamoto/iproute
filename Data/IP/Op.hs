@@ -7,6 +7,11 @@ import Data.IP.Range
 
 ----------------------------------------------------------------
 
+{-|
+
+>>> toIPv4 [127,0,2,1] `masked` intToMask 7
+126.0.0.0
+-}
 class Eq a => Addr a where
     {-|
       The 'masked' function takes an 'Addr' and a contiguous
@@ -34,6 +39,15 @@ instance Addr IPv6 where
   The >:> operator takes two 'AddrRange'. It returns 'True' if
   the first 'AddrRange' contains the second 'AddrRange'. Otherwise,
   it returns 'False'.
+
+>>> makeAddrRange (toIPv4 [127,0,2,1]) 8 >:> makeAddrRange (toIPv4 [127,0,2,1]) 24
+True
+>>> makeAddrRange (toIPv4 [127,0,2,1]) 24 >:> makeAddrRange (toIPv4 [127,0,2,1]) 8
+False
+>>> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 16 >:> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 32
+True
+>>> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 32 >:> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 16
+False
 -}
 (>:>) :: Addr a => AddrRange a -> AddrRange a -> Bool
 a >:> b = mlen a <= mlen b && (addr b `masked` mask a) == addr a
@@ -41,6 +55,15 @@ a >:> b = mlen a <= mlen b && (addr b `masked` mask a) == addr a
 {-|
   The 'toMatchedTo' function take an 'Addr' address and an 'AddrRange',
   and returns 'True' if the range contains the address.
+
+>>> toIPv4 [127,0,2,0] `isMatchedTo` makeAddrRange (toIPv4 [127,0,2,1]) 24
+True
+>>> toIPv4 [127,0,2,0] `isMatchedTo` makeAddrRange (toIPv4 [127,0,2,1]) 32
+False
+>>> toIPv6 [0x2001,0xDB8,0,0,0,0,0,1] `isMatchedTo` makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 32
+True
+>>> toIPv6 [0x2001,0xDB8,0,0,0,0,0,0] `isMatchedTo` makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 128
+False
 -}
 
 isMatchedTo :: Addr a => a -> AddrRange a -> Bool
@@ -50,6 +73,11 @@ isMatchedTo a r = a `masked` mask r == addr r
   The 'makeAddrRange' functions takes an 'Addr' address and a mask
   length. It creates a bit mask from the mask length and masks
   the 'Addr' address, then returns 'AddrRange' made of them.
+
+>>> makeAddrRange (toIPv4 [127,0,2,1]) 8
+127.0.0.0/8
+>>> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 8
+2000:00:00:00:00:00:00:00/8
 -}
 makeAddrRange :: Addr a => a -> Int -> AddrRange a
 makeAddrRange ad len = AddrRange adr msk len

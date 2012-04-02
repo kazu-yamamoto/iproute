@@ -15,6 +15,7 @@ import Data.IP
 import Data.IP.RouteTable.Internal
 import Data.List (sort, nub)
 import Prelude hiding (lookup)
+import Test.Framework.Providers.DocTest
 import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2
 import Test.Framework.TH.Prime
@@ -25,6 +26,11 @@ import Test.QuickCheck
 
 main :: IO ()
 main = $(defaultMainGenerator)
+
+----------------------------------------------------------------
+
+doc_test :: DocTests
+doc_test = docTest ["../Data/IP.hs"] ["-i.."]
 
 ----------------------------------------------------------------
 --
@@ -200,79 +206,6 @@ prop_convert_ipv4 ip = True ==> (toIPv4 . fromIPv4) ip == ip
 
 prop_convert_ipv6 :: IPv6 -> Property
 prop_convert_ipv6 ip = True ==> (toIPv6 . fromIPv6) ip == ip
-
-----------------------------------------------------------------
-
-case_toIPv4 :: Assertion
-case_toIPv4 = show (toIPv4 [192,0,2,1]) @?= "192.0.2.1"
-
-case_toIPv6 :: Assertion
-case_toIPv6 = show (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) @?= "2001:db8:00:00:00:00:00:01"
-
-case_read_IP :: Assertion
-case_read_IP = (read "192.0.2.1" :: IP) @?= IPv4 (read "192.0.2.1" :: IPv4)
-
-case_read_IP_2 :: Assertion
-case_read_IP_2 = (read "2001:db8:00:00:00:00:00:01" :: IP) @?= IPv6 (read "2001:db8:00:00:00:00:00:01" :: IPv6)
-
-case_read_IPv4 :: Assertion
-case_read_IPv4 = show (read "192.0.2.1" :: IPv4) @?= "192.0.2.1"
-
-case_read_IPv6 :: Assertion
-case_read_IPv6 = show (read "2001:db8:00:00:00:00:00:01" :: IPv6) @?= "2001:db8:00:00:00:00:00:01"
-
-case_read_IPv6_2 :: Assertion
-case_read_IPv6_2 = show (read "2001:240:11e:c00::101" :: IPv6) @?= "2001:240:11e:c00:00:00:00:101"
-
-case_read_IP_range :: Assertion
-case_read_IP_range = (read "192.0.2.1/24" :: IPRange)
-                 @?= IPv4Range (read "192.0.2.0/24" :: AddrRange IPv4)
-
-case_read_IP_range_2 :: Assertion
-case_read_IP_range_2 = (read "2001:db8:00:00:00:00:00:01/48" :: IPRange)
-                   @?= IPv6Range (read "2001:db8:00:00:00:00:00:01/48" :: AddrRange IPv6)
-
-case_read_IPv4_range :: Assertion
-case_read_IPv4_range = show (read "192.0.2.1/24" :: AddrRange IPv4) @?= "192.0.2.0/24"
-
-case_read_IPv6_range :: Assertion
-case_read_IPv6_range = show (read "2001:db8:00:00:00:00:00:01/48" :: AddrRange IPv6) @?= "2001:db8:00:00:00:00:00:00/48"
-
-----------------------------------------------------------------
-
-case_makeAddrRange_IPv4 :: Assertion
-case_makeAddrRange_IPv4 = show (makeAddrRange (toIPv4 [127,0,2,1]) 8) @?= "127.0.0.0/8"
-
-case_makeAddrRange_IPv6 :: Assertion
-case_makeAddrRange_IPv6 = show (makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 8) @?= "2000:00:00:00:00:00:00:00/8"
-
-----------------------------------------------------------------
-
-case_contains_IPv4 :: Assertion
-case_contains_IPv4 = makeAddrRange (toIPv4 [127,0,2,1]) 8 >:> makeAddrRange (toIPv4 [127,0,2,1]) 24 @?= True
-
-case_contains_IPv4_2 :: Assertion
-case_contains_IPv4_2 = makeAddrRange (toIPv4 [127,0,2,1]) 24 >:> makeAddrRange (toIPv4 [127,0,2,1]) 8 @?= False
-
-case_contains_IPv6 :: Assertion
-case_contains_IPv6 = makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 16 >:> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 32 @?= True
-
-case_contains_IPv6_2 :: Assertion
-case_contains_IPv6_2 = makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 32 >:> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 16 @?= False
-
-----------------------------------------------------------------
-
-case_isMatchedTo_IPv4 :: Assertion
-case_isMatchedTo_IPv4 = toIPv4 [127,0,2,1] `isMatchedTo` makeAddrRange (toIPv4 [127,0,2,1]) 24 @?= True
-
-case_isMatchedTo_IPv4_2 :: Assertion
-case_isMatchedTo_IPv4_2 = toIPv4 [127,0,2,0] `isMatchedTo` makeAddrRange (toIPv4 [127,0,2,1]) 32 @?= False
-
-case_isMatchedTo_IPv6 :: Assertion
-case_isMatchedTo_IPv6 = toIPv6 [0x2001,0xDB8,0,0,0,0,0,1] `isMatchedTo` makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 32 @?= True
-
-case_isMatchedTo_IPv6_2 :: Assertion
-case_isMatchedTo_IPv6_2 = toIPv6 [0x2001,0xDB8,0,0,0,0,0,0] `isMatchedTo` makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 128 @?= False
 
 ----------------------------------------------------------------
 

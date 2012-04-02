@@ -14,6 +14,11 @@ import Text.Printf
 {-|
   A unified IP data for 'IPv4' and 'IPv6'.
   To create this, use the data constructors. Or use 'read' @\"192.0.2.1\"@ :: 'IP', for example. Also, @\"192.0.2.1\"@ can be used as literal with OverloadedStrings.
+
+>>> (read "192.0.2.1" :: IP) == IPv4 (read "192.0.2.1" :: IPv4)
+True
+>>> (read "2001:db8:00:00:00:00:00:01" :: IP) == IPv6 (read "2001:db8:00:00:00:00:00:01" :: IPv6)
+True
 -}
 
 data IP = IPv4 { ipv4 :: IPv4 }
@@ -33,12 +38,20 @@ type IPv6Addr = (Word32,Word32,Word32,Word32)
 {-|
   The abstract data structure to express an IPv4 address.
   To create this, use 'toIPv4'. Or use 'read' @\"192.0.2.1\"@ :: 'IPv4', for example. Also, @\"192.0.2.1\"@ can be used as literal with OverloadedStrings.
+
+>>> read "192.0.2.1" :: IPv4
+192.0.2.1
 -}
 newtype IPv4 = IP4 IPv4Addr deriving (Eq, Ord)
 
 {-|
   The abstract data structure to express an IPv6 address.
   To create this, use 'toIPv6'. Or use 'read' @\"2001:DB8::1\"@ :: 'IPv6', for example. Also, @\"2001:DB8::1\"@ can be used as literal with OverloadedStrings.
+
+>>> read "2001:db8:00:00:00:00:00:01" :: IPv6
+2001:db8:00:00:00:00:00:01
+>>> read "2001:240:11e:c00::101" :: IPv6
+2001:240:11e:c00:00:00:00:101
 -}
 newtype IPv6 = IP6 IPv6Addr deriving (Eq, Ord)
 
@@ -78,7 +91,9 @@ showIPv6 (IP6 (a1,a2,a3,a4)) = show6 a1 ++ ":" ++ show6 a2 ++ ":" ++ show6 a3 ++
 
 {-|
   The 'toIPv4' function takes a list of 'Int' and returns 'IPv4'.
-  For example, 'toIPv4' @[192,0,2,1]@.
+
+>>> show (toIPv4 [192,0,2,1])
+"192.0.2.1"
 -}
 toIPv4 :: [Int] -> IPv4
 toIPv4 = IP4 . toWord32
@@ -88,7 +103,9 @@ toIPv4 = IP4 . toWord32
 
 {-|
   The 'toIPv6' function takes a list of 'Int' and returns 'IPv6'.
-  For example, 'toIPv6' @[0x2001,0xDB8,0,0,0,0,0,1]@.
+
+>>> show (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1])
+"2001:db8:00:00:00:00:00:01"
 -}
 toIPv6 :: [Int] -> IPv6
 toIPv6 ad = let [x1,x2,x3,x4] = map toWord32 $ split2 ad
@@ -106,12 +123,18 @@ toIPv6 ad = let [x1,x2,x3,x4] = map toWord32 $ split2 ad
 
 {-|
   The 'fromIPv4' function convert 'IPv4' to a list of 'Int'.
+
+>>> fromIPv4 (toIPv4 [192,0,2,1])
+[192,0,2,1]
 -}
 fromIPv4 :: IPv4 -> [Int]
 fromIPv4 (IP4 w) = map (\n -> fromEnum $ (w `shiftR` n) .&. 0xff) [0o30, 0o20, 0o10, 0o00]
 
 {-|
   The 'toIPv6' function convert 'IPv6' to a list of 'Int'.
+
+>>> fromIPv6 (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1])
+[8193,3512,0,0,0,0,0,1]
 -}
 fromIPv6 :: IPv6 -> [Int]
 fromIPv6 (IP6 (w1, w2, w3, w4)) = map fromEnum (concatMap split [w1,w2,w3,w4])

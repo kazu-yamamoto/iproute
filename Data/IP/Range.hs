@@ -14,6 +14,11 @@ import Text.Appar.String
   A unified data for 'AddrRange' 'IPv4' and 'AddrRange' 'IPv6'.
   To create this, use 'read' @\"192.0.2.0/24\"@ :: 'IPRange'.
   Also, @\"192.0.2.0/24\"@ can be used as literal with OverloadedStrings.
+
+>>> (read "192.0.2.1/24" :: IPRange) == IPv4Range (read "192.0.2.0/24" :: AddrRange IPv4)
+True
+>>> (read "2001:db8:00:00:00:00:00:01/48" :: IPRange) == IPv6Range (read "2001:db8:00:00:00:00:00:01/48" :: AddrRange IPv6)
+True
 -}
 
 data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
@@ -33,6 +38,11 @@ data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
 
   To create this, use 'makeAddrRange' or 'read' @\"192.0.2.0/24\"@ :: 'AddrRange' 'IPv4'.
   Also, @\"192.0.2.0/24\"@ can be used as literal with OverloadedStrings.
+
+>>> read "192.0.2.1/24" :: AddrRange IPv4
+192.0.2.0/24
+>>> read "2001:db8:00:00:00:00:00:01/48" :: AddrRange IPv6
+2001:db8:00:00:00:00:00:00/48
 -}
 data AddrRange a = AddrRange {
         -- |The 'addr' function returns an address from 'AddrRange'.
