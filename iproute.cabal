@@ -27,7 +27,11 @@ library
                         Data.IP.Op
                         Data.IP.Range
                         Data.IP.RouteTable.Internal
-  Build-Depends:        base >= 4 && < 5, appar, containers
+  Build-Depends:        base >= 4 && < 5
+                      , appar
+                      , byteorder
+                      , containers
+                      , network
 Source-Repository head
   Type:                 git
   Location:             git://github.com/kazu-yamamoto/iproute.git

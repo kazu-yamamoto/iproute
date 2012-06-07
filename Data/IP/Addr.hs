@@ -6,6 +6,8 @@ import Data.Char
 import Data.List (foldl')
 import Data.String
 import Data.Word
+import Network.Socket
+import System.ByteOrder
 import Text.Appar.String
 import Text.Printf
 
@@ -250,3 +252,36 @@ ip6' =      do colon2
                           let spring = replicate len 0
                           return $ bs1 ++ spring ++ bs2
       check bs = when (length bs /= 8) (fail "IPv6 address4")
+
+----------------------------------------------------------------
+--
+-- HostAddress and HostAddress6
+--
+
+-- | The 'fromHostAddress' function converts 'HostAddress' to 'IPv4'.
+fromHostAddress :: HostAddress -> IPv4
+fromHostAddress addr4
+  | byteOrder == LittleEndian = IP4 $ fixByteOrder addr4
+  | otherwise                 = IP4 addr4
+
+-- | The 'toHostAddress' function converts 'IPv4' to 'HostAddress'.
+toHostAddress :: IPv4 -> HostAddress
+toHostAddress (IP4 addr4)
+  | byteOrder == LittleEndian = fixByteOrder addr4
+  | otherwise                 = addr4
+
+-- | The 'fromHostAddress6' function converts 'HostAddress6' to 'IPv6'.
+fromHostAddress6 :: HostAddress6 -> IPv6
+fromHostAddress6 addr6 = IP6 addr6
+
+-- | The 'toHostAddress6' function converts 'IPv6' to 'HostAddress6'.
+toHostAddress6 :: IPv6 -> HostAddress6
+toHostAddress6 (IP6 addr6) = addr6
+
+fixByteOrder :: Word32 -> Word32
+fixByteOrder s = d1 .|. d2 .|. d3 .|. d4
+  where
+    d1 = shiftL s 24
+    d2 = shiftL s  8 .&. 0x00ff0000
+    d3 = shiftR s  8 .&. 0x0000ff00
+    d4 = shiftR s 24 .&. 0x000000ff
