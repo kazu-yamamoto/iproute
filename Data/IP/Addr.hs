@@ -124,7 +124,7 @@ toIPv6 ad = let [x1,x2,x3,x4] = map toWord32 $ split2 ad
 --
 
 {-|
-  The 'fromIPv4' function convert 'IPv4' to a list of 'Int'.
+  The 'fromIPv4' function converts 'IPv4' to a list of 'Int'.
 
 >>> fromIPv4 (toIPv4 [192,0,2,1])
 [192,0,2,1]
@@ -133,7 +133,7 @@ fromIPv4 :: IPv4 -> [Int]
 fromIPv4 (IP4 w) = map (\n -> fromEnum $ (w `shiftR` n) .&. 0xff) [0o30, 0o20, 0o10, 0o00]
 
 {-|
-  The 'toIPv6' function convert 'IPv6' to a list of 'Int'.
+  The 'toIPv6' function converts 'IPv6' to a list of 'Int'.
 
 >>> fromIPv6 (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1])
 [8193,3512,0,0,0,0,0,1]
