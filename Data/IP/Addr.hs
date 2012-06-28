@@ -233,7 +233,8 @@ ip6 :: Parser IPv6
 ip6 = toIPv6 <$> ip6'
 
 ip6' :: Parser [Int]
-ip6' =      do colon2
+ip6' =      ip4Embedded
+        <|> do colon2
                bs <- option [] hexcolon
                format [] bs
         <|> try (do rs <- hexcolon
@@ -255,6 +256,25 @@ ip6' =      do colon2
                           let spring = replicate len 0
                           return $ bs1 ++ spring ++ bs2
       check bs = when (length bs /= 8) (fail "IPv6 address4")
+      beforeEmbedded = many $ try $ hex <* char ':'
+      ip4ToIp6 [a,b,c,d] = [ a `shiftL` 8 .|. b
+                           , c `shiftL` 8 .|. d ]
+      ip4Embedded :: Parser [Int]
+      ip4Embedded =   try (do colon2
+                              bs <- beforeEmbedded
+                              embedded <- ip4'
+                              format [] (bs ++ ip4ToIp6 embedded))
+                  -- matches 10::60:127.0.0.1
+                  <|> try (do bs1 <- manyTill (try $ hex <* char ':') (char ':')
+                              bs2 <- option [] beforeEmbedded
+                              embedded <- ip4'
+                              format bs1 (bs2 ++ ip4ToIp6 embedded))
+                  -- matches 10:20:30:40:50:60:127.0.0.1
+                  <|> try (do bs <- beforeEmbedded
+                              embedded <- ip4'
+                              let rs = bs ++ ip4ToIp6 embedded
+                              check rs
+                              return rs)
 
 ----------------------------------------------------------------
 --
