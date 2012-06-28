@@ -202,10 +202,13 @@ dig = 0 <$ char '0'
     toInt n ns = foldl' (\x y -> x * 10 + y) 0 . map digitToInt $ n : ns
 
 ip4 :: Parser IPv4
-ip4 = do
+ip4 = toIPv4 <$> ip4'
+
+ip4' :: Parser [Int]
+ip4' = do
     as <- dig `sepBy1` char '.'
     check as
-    return $ toIPv4 as
+    return as
   where
     test errmsg adr = when (adr < 0 || 255 < adr) (fail errmsg)
     check as = do let errmsg = "IPv4 adddress"
