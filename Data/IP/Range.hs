@@ -74,12 +74,11 @@ instance Read IPRange where
     readsPrec _ = parseIPRange
 
 parseIPRange :: String -> [(IPRange,String)]
-parseIPRange cs =
-  case runParser ip4range cs of
-       (Just ip,rest) -> [(IPv4Range ip,rest)]
-       (Nothing,_) -> case runParser ip6range cs of
-                           (Just ip,rest) -> [(IPv6Range ip,rest)]
-                           (Nothing,_) -> error $ "parseIPRange" ++ cs
+parseIPRange cs = case runParser ip4range cs of
+    (Just ip,rest) -> [(IPv4Range ip,rest)]
+    (Nothing,_)    -> case runParser ip6range cs of
+        (Just ip,rest) -> [(IPv6Range ip,rest)]
+        (Nothing,_) -> error $ "parseIPRange" ++ cs
 
 instance Read (AddrRange IPv4) where
     readsPrec _ = parseIPv4Range

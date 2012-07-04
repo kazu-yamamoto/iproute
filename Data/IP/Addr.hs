@@ -70,21 +70,23 @@ instance Show IPv6 where
 
 showIPv4 :: IPv4 -> String
 showIPv4 (IP4 a) = show4 a
-    where
-      remQuo x = (x `mod` 256, x `div` 256)
-      show4 q = let (a4,q4) = remQuo q
-                    (a3,q3) = remQuo q4
-                    (a2,q2) = remQuo q3
-                    (a1, _) = remQuo q2
-                 in printf "%d.%d.%d.%d" a1 a2 a3 a4
+  where
+    remQuo x = (x `mod` 256, x `div` 256)
+    show4 q = printf "%d.%d.%d.%d" a1 a2 a3 a4
+      where
+        (a4,q4) = remQuo q
+        (a3,q3) = remQuo q4
+        (a2,q2) = remQuo q3
+        (a1, _) = remQuo q2
 
 showIPv6 :: IPv6 -> String
 showIPv6 (IP6 (a1,a2,a3,a4)) = show6 a1 ++ ":" ++ show6 a2 ++ ":" ++ show6 a3 ++ ":" ++ show6 a4
-    where
-      remQuo x = (x `mod` 65536, x `div` 65536)
-      show6 q = let (r2,q2) = remQuo q
-                    (r1, _) = remQuo q2
-                in printf "%02x:%02x" r1 r2
+  where
+    remQuo x = (x `mod` 65536, x `div` 65536)
+    show6 q = printf "%02x:%02x" r1 r2
+      where
+        (r2,q2) = remQuo q
+        (r1, _) = remQuo q2
 
 ----------------------------------------------------------------
 --
@@ -99,9 +101,9 @@ showIPv6 (IP6 (a1,a2,a3,a4)) = show6 a1 ++ ":" ++ show6 a2 ++ ":" ++ show6 a3 ++
 -}
 toIPv4 :: [Int] -> IPv4
 toIPv4 = IP4 . toWord32
-    where
-      toWord32 [a1,a2,a3,a4] = fromIntegral $ shift a1 24 + shift a2 16 + shift a3 8 + a4
-      toWord32 _             = error "toWord32"
+  where
+    toWord32 [a1,a2,a3,a4] = fromIntegral $ shift a1 24 + shift a2 16 + shift a3 8 + a4
+    toWord32 _             = error "toWord32"
 
 {-|
   The 'toIPv6' function takes a list of 'Int' and returns 'IPv6'.
@@ -110,13 +112,13 @@ toIPv4 = IP4 . toWord32
 2001:db8:00:00:00:00:00:01
 -}
 toIPv6 :: [Int] -> IPv6
-toIPv6 ad = let [x1,x2,x3,x4] = map toWord32 $ split2 ad
-            in IP6 (x1,x2,x3,x4)
-    where
-      split2 [] = []
-      split2 x  = take 2 x : split2 (drop 2 x)
-      toWord32 [a1,a2] = fromIntegral $ shift a1 16 + a2
-      toWord32 _             = error "toWord32"
+toIPv6 ad = IP6 (x1,x2,x3,x4)
+  where
+    [x1,x2,x3,x4] = map toWord32 $ split2 ad
+    split2 [] = []
+    split2 x  = take 2 x : split2 (drop 2 x)
+    toWord32 [a1,a2] = fromIntegral $ shift a1 16 + a2
+    toWord32 _       = error "toWord32"
 
 ----------------------------------------------------------------
 --
@@ -159,12 +161,11 @@ instance Read IPv6 where
     readsPrec _ = parseIPv6
 
 parseIP :: String -> [(IP,String)]
-parseIP cs =
-  case runParser ip4 cs of
-       (Just ip,rest) -> [(IPv4 ip,rest)]
-       (Nothing,_) -> case runParser ip6 cs of
-                           (Just ip,rest) -> [(IPv6 ip,rest)]
-                           (Nothing,_) -> error $ "parseIP" ++ cs
+parseIP cs = case runParser ip4 cs of
+    (Just ip,rest) -> [(IPv4 ip,rest)]
+    (Nothing,_) -> case runParser ip6 cs of
+        (Just ip,rest) -> [(IPv6 ip,rest)]
+        (Nothing,_) -> error $ "parseIP" ++ cs
 
 parseIPv4 :: String -> [(IPv4,String)]
 parseIPv4 cs = case runParser ip4 cs of
@@ -211,9 +212,10 @@ ip4' = do
     return as
   where
     test errmsg adr = when (adr < 0 || 255 < adr) (fail errmsg)
-    check as = do let errmsg = "IPv4 adddress"
-                  when (length as /= 4) (fail errmsg)
-                  mapM_ (test errmsg) as
+    check as = do
+        let errmsg = "IPv4 adddress"
+        when (length as /= 4) (fail errmsg)
+        mapM_ (test errmsg) as
 
 ----------------------------------------------------------------
 --
@@ -221,60 +223,70 @@ ip4' = do
 --
 
 hex :: Parser Int
-hex = do ns <- some hexDigit
-         check ns
-         let ms = map digitToInt ns
-             val = foldl' (\x y -> x * 16 + y) 0 ms
-         return val
-    where
-      check ns = when (length ns > 4) (fail "IPv6 address -- more than 4 hex")
+hex = do
+    ns <- some hexDigit
+    check ns
+    let ms = map digitToInt ns
+        val = foldl' (\x y -> x * 16 + y) 0 ms
+    return val
+  where
+    check ns = when (length ns > 4) (fail "IPv6 address -- more than 4 hex")
+
+colon2 :: Parser String
+colon2 = string "::"
+
+format :: [Int] -> [Int] -> Parser [Int]
+format bs1 bs2 = do
+    let len1 = length bs1
+        len2 = length bs2
+    when (len1 > 7) (fail "IPv6 address1")
+    when (len2 > 7) (fail "IPv6 address2")
+    let len = 8 - len1 - len2
+    when (len <= 0) (fail "IPv6 address3")
+    let spring = replicate len 0
+    return $ bs1 ++ spring ++ bs2
 
 ip6 :: Parser IPv6
 ip6 = toIPv6 <$> ip6'
 
 ip6' :: Parser [Int]
-ip6' =      ip4Embedded
-        <|> do colon2
-               bs <- option [] hexcolon
-               format [] bs
-        <|> try (do rs <- hexcolon
-                    check rs
-                    return rs)
-        <|> do bs1 <- hexcolon2
-               bs2 <- option [] hexcolon
-               format bs1 bs2
-    where
-      colon2 = string "::"
-      hexcolon = hex `sepBy1` char ':'
-      hexcolon2 = manyTill (hex <* char ':') (char ':')
-      format bs1 bs2 = do let len1 = length bs1
-                              len2 = length bs2
-                          when (len1 > 7) (fail "IPv6 address1")
-                          when (len2 > 7) (fail "IPv6 address2")
-                          let len = 8 - len1 - len2
-                          when (len <= 0) (fail "IPv6 address3")
-                          let spring = replicate len 0
-                          return $ bs1 ++ spring ++ bs2
-      check bs = when (length bs /= 8) (fail "IPv6 address4")
-      beforeEmbedded = many $ try $ hex <* char ':'
-      ip4ToIp6 [a,b,c,d] = [ a `shiftL` 8 .|. b
-                           , c `shiftL` 8 .|. d ]
-      ip4Embedded :: Parser [Int]
-      ip4Embedded =   try (do colon2
-                              bs <- beforeEmbedded
-                              embedded <- ip4'
-                              format [] (bs ++ ip4ToIp6 embedded))
-                  -- matches 10::60:127.0.0.1
-                  <|> try (do bs1 <- manyTill (try $ hex <* char ':') (char ':')
-                              bs2 <- option [] beforeEmbedded
-                              embedded <- ip4'
-                              format bs1 (bs2 ++ ip4ToIp6 embedded))
-                  -- matches 10:20:30:40:50:60:127.0.0.1
-                  <|> try (do bs <- beforeEmbedded
-                              embedded <- ip4'
-                              let rs = bs ++ ip4ToIp6 embedded
-                              check rs
-                              return rs)
+ip6' = ip4Embedded
+   <|> do colon2
+          bs <- option [] hexcolon
+          format [] bs
+   <|> try (do rs <- hexcolon
+               check rs
+               return rs)
+   <|> do bs1 <- hexcolon2
+          bs2 <- option [] hexcolon
+          format bs1 bs2
+  where
+    hexcolon = hex `sepBy1` char ':'
+    hexcolon2 = manyTill (hex <* char ':') (char ':')
+    check bs = when (length bs /= 8) (fail "IPv6 address4")
+
+ip4Embedded :: Parser [Int]
+ip4Embedded = try (do colon2
+                      bs <- beforeEmbedded
+                      embedded <- ip4'
+                      format [] (bs ++ ip4ToIp6 embedded))
+              -- matches 10::60:127.0.0.
+          <|> try (do bs1 <- manyTill (try $ hex <* char ':') (char ':')
+                      bs2 <- option [] beforeEmbedded
+                      embedded <- ip4'
+                      format bs1 (bs2 ++ ip4ToIp6 embedded))
+              -- matches 10:20:30:40:50:60:127.0.0.1
+          <|> try (do bs <- beforeEmbedded
+                      embedded <- ip4'
+                      let rs = bs ++ ip4ToIp6 embedded
+                      check rs
+                      return rs)
+  where
+    beforeEmbedded = many $ try $ hex <* char ':'
+    ip4ToIp6 [a,b,c,d] = [ a `shiftL` 8 .|. b
+                         , c `shiftL` 8 .|. d ]
+    ip4ToIp6 _ = error "ip4ToIp6"
+    check bs = when (length bs /= 8) (fail "IPv6 address4")
 
 ----------------------------------------------------------------
 --
@@ -295,7 +307,7 @@ toHostAddress (IP4 addr4)
 
 -- | The 'fromHostAddress6' function converts 'HostAddress6' to 'IPv6'.
 fromHostAddress6 :: HostAddress6 -> IPv6
-fromHostAddress6 addr6 = IP6 addr6
+fromHostAddress6 = IP6
 
 -- | The 'toHostAddress6' function converts 'IPv6' to 'HostAddress6'.
 toHostAddress6 :: IPv6 -> HostAddress6

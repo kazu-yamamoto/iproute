@@ -110,31 +110,33 @@ insert k1 v1 Nil = Node k1 tb1 (Just v1) Nil Nil
   where
     tb1 = keyToTestBit k1
 insert k1 v1 s@(Node k2 tb2 v2 l r)
-    | k1 == k2  = Node k1 tb1 (Just v1) l r
-    | k2 >:> k1 = if isLeft k1 tb2
-                  then Node k2 tb2 v2 (insert k1 v1 l) r
-                  else Node k2 tb2 v2 l (insert k1 v1 r)
-    | k1 >:> k2 = if isLeft k2 tb1
-                  then Node k1 tb1 (Just v1) s Nil
-                  else Node k1 tb1 (Just v1) Nil s
-    | otherwise = let n = Node k1 tb1 (Just v1) Nil Nil
-                  in join n s
+  | k1 == k2  = Node k1 tb1 (Just v1) l r
+  | k2 >:> k1 = if isLeft k1 tb2 then
+                    Node k2 tb2 v2 (insert k1 v1 l) r
+                  else
+                    Node k2 tb2 v2 l (insert k1 v1 r)
+  | k1 >:> k2 = if isLeft k2 tb1 then
+                    Node k1 tb1 (Just v1) s Nil
+                  else
+                    Node k1 tb1 (Just v1) Nil s
+  | otherwise = let n = Node k1 tb1 (Just v1) Nil Nil
+                in join n s
   where
     tb1 = keyToTestBit k1
 
 join :: Routable k => IPRTable k a -> IPRTable k a -> IPRTable k a
-join s1@(Node k1 _ _ _ _) s2@(Node k2 _ _ _ _) =
-    let kg = glue 0 k1 k2
-        tbg = keyToTestBit kg
-    in if isLeft k1 tbg
-       then Node kg tbg Nothing s1 s2
-       else Node kg tbg Nothing s2 s1
+join s1@(Node k1 _ _ _ _) s2@(Node k2 _ _ _ _)
+  | isLeft k1 tbg = Node kg tbg Nothing s1 s2
+  | otherwise     = Node kg tbg Nothing s2 s1
+  where
+    kg = glue 0 k1 k2
+    tbg = keyToTestBit kg
 join _ _ = error "join"
 
 glue :: (Routable k) => Int -> AddrRange k -> AddrRange k -> AddrRange k
 glue n k1 k2
-    | addr k1 `masked` mk == addr k2 `masked` mk = glue (n + 1) k1 k2
-    | otherwise = makeAddrRange (addr k1) (n - 1)
+  | addr k1 `masked` mk == addr k2 `masked` mk = glue (n + 1) k1 k2
+  | otherwise = makeAddrRange (addr k1) (n - 1)
   where
     mk = intToMask n
 
@@ -157,9 +159,10 @@ delete :: (Routable k) => AddrRange k -> IPRTable k a -> IPRTable k a
 delete _ Nil = Nil
 delete k1 s@(Node k2 tb2 v2 l r)
   | k1 == k2  = node k2 tb2 Nothing l r
-  | k2 >:> k1 = if isLeft k1 tb2
-                then node k2 tb2 v2 (delete k1 l) r
-                else node k2 tb2 v2 l (delete k1 r)
+  | k2 >:> k1 = if isLeft k1 tb2 then
+                    node k2 tb2 v2 (delete k1 l) r
+                  else
+                    node k2 tb2 v2 l (delete k1 r)
   | otherwise = s
 
 node :: (Routable k) => AddrRange k -> k -> Maybe a -> IPRTable k a -> IPRTable k a -> IPRTable k a
@@ -195,17 +198,19 @@ lookup k s = search k s Nothing
 search :: Routable k => AddrRange k -> IPRTable k a -> Maybe a -> Maybe a
 search _ Nil res = res
 search k1 (Node k2 tb2 Nothing l r) res
-    | k1 == k2  = res
-    | k2 >:> k1 = if isLeft k1 tb2
-                  then search k1 l res
-                  else search k1 r res
-    | otherwise = res
+  | k1 == k2  = res
+  | k2 >:> k1 = if isLeft k1 tb2 then
+                    search k1 l res
+                  else
+                    search k1 r res
+  | otherwise = res
 search k1 (Node k2 tb2 vl l r) res
-    | k1 == k2  = vl
-    | k2 >:> k1 = if isLeft k1 tb2
-                  then search k1 l vl
-                  else search k1 r vl
-    | otherwise = res
+  | k1 == k2  = vl
+  | k2 >:> k1 = if isLeft k1 tb2 then
+                    search k1 l vl
+                  else
+                    search k1 r vl
+  | otherwise = res
 
 ----------------------------------------------------------------
 
@@ -223,13 +228,13 @@ search k1 (Node k2 tb2 vl l r) res
 findMatch :: MonadPlus m => Routable k => AddrRange k -> IPRTable k a -> m (AddrRange k, a)
 findMatch _ Nil = mzero
 findMatch k1 (Node k2 _ Nothing l r)
-    | k1 >:> k2 = findMatch k1 l `mplus` findMatch k1 r
-    | k2 >:> k1 = findMatch k1 l `mplus` findMatch k1 r
-    | otherwise = mzero
+  | k1 >:> k2 = findMatch k1 l `mplus` findMatch k1 r
+  | k2 >:> k1 = findMatch k1 l `mplus` findMatch k1 r
+  | otherwise = mzero
 findMatch k1 (Node k2 _ (Just vl) l r)
-    | k1 >:> k2 = return (k2, vl) `mplus` findMatch k1 l `mplus` findMatch k1 r
-    | k2 >:> k1 = findMatch k1 l `mplus` findMatch k1 r
-    | otherwise = mzero
+  | k1 >:> k2 = return (k2, vl) `mplus` findMatch k1 l `mplus` findMatch k1 r
+  | k2 >:> k1 = findMatch k1 l `mplus` findMatch k1 r
+  | otherwise = mzero
 
 ----------------------------------------------------------------
 

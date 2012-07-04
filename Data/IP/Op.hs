@@ -81,6 +81,6 @@ isMatchedTo a r = a `masked` mask r == addr r
 -}
 makeAddrRange :: Addr a => a -> Int -> AddrRange a
 makeAddrRange ad len = AddrRange adr msk len
-   where
-     msk = intToMask len
-     adr = ad `masked` msk
+  where
+    msk = intToMask len
+    adr = ad `masked` msk
