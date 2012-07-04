@@ -52,8 +52,12 @@ newtype IPv4 = IP4 IPv4Addr deriving (Eq, Ord)
 
 >>> read "2001:db8:00:00:00:00:00:01" :: IPv6
 2001:db8:00:00:00:00:00:01
->>> read "2001:240:11e:c00::101" :: IPv6
-2001:240:11e:c00:00:00:00:101
+>>> read "2001:db8:11e:c00::101" :: IPv6
+2001:db8:11e:c00:00:00:00:101
+>>> read "2001:db8:11e:c00:aa:bb:192.0.2.1" :: IPv6
+2001:db8:11e:c00:aa:bb:c000:201
+>>> read "2001:db8::192.0.2.1" :: IPv6
+2001:db8:00:00:00:00:c000:201
 -}
 newtype IPv6 = IP6 IPv6Addr deriving (Eq, Ord)
 
@@ -270,12 +274,12 @@ ip4Embedded = try (do colon2
                       bs <- beforeEmbedded
                       embedded <- ip4'
                       format [] (bs ++ ip4ToIp6 embedded))
-              -- matches 10::60:127.0.0.
+              -- matches 2001:db8::192.0.2.1
           <|> try (do bs1 <- manyTill (try $ hex <* char ':') (char ':')
                       bs2 <- option [] beforeEmbedded
                       embedded <- ip4'
                       format bs1 (bs2 ++ ip4ToIp6 embedded))
-              -- matches 10:20:30:40:50:60:127.0.0.1
+              -- matches 2001:db8:11e:c00:aa:bb:192.0.2.1
           <|> try (do bs <- beforeEmbedded
                       embedded <- ip4'
                       let rs = bs ++ ip4ToIp6 embedded
