@@ -236,8 +236,8 @@ hex = do
   where
     check ns = when (length ns > 4) (fail "IPv6 address -- more than 4 hex")
 
-colon2 :: Parser String
-colon2 = string "::"
+colon2 :: Parser ()
+colon2 = void $ string "::"
 
 format :: [Int] -> [Int] -> Parser [Int]
 format bs1 bs2 = do

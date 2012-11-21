@@ -99,7 +99,7 @@ parseIPv6Range cs = case runParser ip6range cs of
 ip4range :: Parser (AddrRange IPv4)
 ip4range = do
     ip <- ip4
-    len <- option 32 $ do { char '/'; dig }
+    len <- option 32 $ char '/' >> dig
     check len
     let msk = maskIPv4 len
         adr = ip `maskedIPv4` msk
@@ -113,7 +113,7 @@ IP4 a `maskedIPv4` IP4 m = IP4 (a .&. m)
 ip6range :: Parser (AddrRange IPv6)
 ip6range = do
     ip <- ip6
-    len <- option 128 $ do { char '/'; dig }
+    len <- option 128 $ char '/' >> dig
     check len
     let msk = maskIPv6 len
         adr = ip `maskedIPv6` msk
