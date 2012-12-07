@@ -12,10 +12,12 @@ Description:            IP Routing Table is a tree of IP ranges
                         way branching removed. Both IPv4 and IPv6
                         are supported.
 Category:               Algorithms, Network
-Cabal-Version:          >= 1.6
+Cabal-Version:          >= 1.10
 Build-Type:             Simple
 Extra-Source-Files:     test/Test.hs test/IPv4Search.hs test/Makefile
-library
+
+Library
+  Default-Language:     Haskell2010
   GHC-Options:          -Wall
   Exposed-Modules:      Data.IP
                         Data.IP.RouteTable
@@ -32,11 +34,27 @@ library
 
 Test-Suite doctest
   Type:                 exitcode-stdio-1.0
+  Default-Language:     Haskell2010
   HS-Source-Dirs:       test
   Ghc-Options:          -threaded -Wall
   Main-Is:              doctests.hs
   Build-Depends:        base
                       , doctest >= 0.9.3
+
+Test-Suite spec
+  Type:                 exitcode-stdio-1.0
+  Default-Language:     Haskell2010
+  Hs-Source-Dirs:       ., test
+  Ghc-Options:          -Wall
+  Main-Is:              Spec.hs
+  Other-Modules:        RouteTableSpec
+  Build-Depends:        base
+                      , hspec
+                      , QuickCheck
+                      , appar
+                      , byteorder
+                      , containers
+                      , network
 
 Source-Repository head
   Type:                 git
