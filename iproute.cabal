@@ -14,7 +14,6 @@ Description:            IP Routing Table is a tree of IP ranges
 Category:               Algorithms, Network
 Cabal-Version:          >= 1.10
 Build-Type:             Simple
-Extra-Source-Files:     test/Test.hs test/IPv4Search.hs test/Makefile
 
 Library
   Default-Language:     Haskell2010
