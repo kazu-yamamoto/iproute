@@ -169,16 +169,16 @@ parseIP cs = case runParser ip4 cs of
     (Just ip,rest) -> [(IPv4 ip,rest)]
     (Nothing,_) -> case runParser ip6 cs of
         (Just ip,rest) -> [(IPv6 ip,rest)]
-        (Nothing,_) -> error $ "parseIP" ++ cs
+        (Nothing,_) -> []
 
 parseIPv4 :: String -> [(IPv4,String)]
 parseIPv4 cs = case runParser ip4 cs of
-    (Nothing,_)    -> error $ "parseIPv4 " ++ cs
+    (Nothing,_)    -> []
     (Just a4,rest) -> [(a4,rest)]
 
 parseIPv6 :: String -> [(IPv6,String)]
 parseIPv6 cs = case runParser ip6 cs of
-    (Nothing,_)    -> error $ "parseIPv6 " ++ cs
+    (Nothing,_)    -> []
     (Just a6,rest) -> [(a6,rest)]
 
 ----------------------------------------------------------------
