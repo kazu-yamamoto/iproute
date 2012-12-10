@@ -47,6 +47,7 @@ Test-Suite spec
   Ghc-Options:          -Wall
   Main-Is:              Spec.hs
   Other-Modules:        RouteTableSpec
+                      , IPReadSpec
   Build-Depends:        base
                       , hspec
                       , QuickCheck
@@ -54,6 +55,7 @@ Test-Suite spec
                       , byteorder
                       , containers
                       , network
+                      , Safe
 
 Source-Repository head
   Type:                 git
