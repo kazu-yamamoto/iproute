@@ -78,7 +78,7 @@ parseIPRange cs = case runParser ip4range cs of
     (Just ip,rest) -> [(IPv4Range ip,rest)]
     (Nothing,_)    -> case runParser ip6range cs of
         (Just ip,rest) -> [(IPv6Range ip,rest)]
-        (Nothing,_) -> error $ "parseIPRange" ++ cs
+        (Nothing,_) -> []
 
 instance Read (AddrRange IPv4) where
     readsPrec _ = parseIPv4Range
@@ -88,12 +88,12 @@ instance Read (AddrRange IPv6) where
 
 parseIPv4Range :: String -> [(AddrRange IPv4,String)]
 parseIPv4Range cs = case runParser ip4range cs of
-    (Nothing,_)    -> error $ "parseIPv4Range " ++ cs
+    (Nothing,_)    -> []
     (Just a4,rest) -> [(a4,rest)]
 
 parseIPv6Range :: String -> [(AddrRange IPv6,String)]
 parseIPv6Range cs = case runParser ip6range cs of
-    (Nothing,_)    -> error $ "parseIPv6Range " ++ cs
+    (Nothing,_)    -> []
     (Just a6,rest) -> [(a6,rest)]
 
 ip4range :: Parser (AddrRange IPv4)
