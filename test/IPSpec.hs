@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module IPReadSpec where
+module IPSpec where
 
 import Data.IP
 import Safe (readMay)
@@ -52,10 +52,10 @@ spec = do
         prop "IPv6 failure" ipv6_fail
 
 to_str_ipv4 :: AddrRange IPv4 -> Bool
-to_str_ipv4 a = (readMay $ show a) == Just a
+to_str_ipv4 a = readMay (show a) == Just a
 
 to_str_ipv6 :: AddrRange IPv6 -> Bool
-to_str_ipv6 a = (readMay $ show a) == Just a
+to_str_ipv6 a = readMay (show a) == Just a
 
 ipv4_fail :: InvalidIPv4Str -> Bool
 ipv4_fail (Iv4 a) = (readMay a :: Maybe (AddrRange IPv4)) == Nothing

@@ -47,7 +47,7 @@ Test-Suite spec
   Ghc-Options:          -Wall
   Main-Is:              Spec.hs
   Other-Modules:        RouteTableSpec
-                      , IPReadSpec
+                      , IPSpec
   Build-Depends:        base
                       , hspec
                       , QuickCheck
