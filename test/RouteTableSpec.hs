@@ -3,6 +3,7 @@
 
 module RouteTableSpec where
 
+import Control.Applicative
 import Control.Monad
 import Data.IP
 import Data.IP.RouteTable.Internal
@@ -29,15 +30,10 @@ instance Arbitrary IPv6 where
     arbitrary = arbitraryAdr toIPv6 65535 8
 
 arbitraryAdr :: Routable a => ([Int] -> a) -> Int -> Int -> Gen a
-arbitraryAdr func width adrlen = do
-    a <- replicateM adrlen (choose (0, width))
-    return $ func a
+arbitraryAdr func width adrlen = func <$> replicateM adrlen (choose (0, width))
 
 arbitraryIP :: Routable a => Gen a -> Int -> Gen (AddrRange a)
-arbitraryIP adrGen msklen = do
-    adr <- adrGen
-    len <- choose (0,msklen)
-    return $ makeAddrRange adr len
+arbitraryIP adrGen msklen = makeAddrRange <$> adrGen <*> choose (0,msklen)
 
 ----------------------------------------------------------------
 --

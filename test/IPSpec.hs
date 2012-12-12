@@ -3,6 +3,7 @@
 
 module IPSpec where
 
+import Control.Applicative
 import Data.IP
 import Safe (readMay)
 import Test.Hspec
@@ -22,10 +23,10 @@ instance Arbitrary InvalidIPv4Str where
     arbitrary = arbitraryIIPv4Str arbitrary 32
 
 arbitraryIIPv4Str :: Gen IPv4 -> Int -> Gen InvalidIPv4Str
-arbitraryIIPv4Str adrGen msklen = do
-    adr <- adrGen
-    len <- oneof [choose (minBound, -1), choose (msklen + 1, maxBound)]
-    return $ Iv4 $ show adr ++ "/" ++ show len
+arbitraryIIPv4Str adrGen msklen = toIv4 <$> adrGen <*> lenGen
+  where
+    toIv4 adr len = Iv4 $ show adr ++ "/" ++ show len
+    lenGen = oneof [choose (minBound, -1), choose (msklen + 1, maxBound)]
 
 data InvalidIPv6Str = Iv6 String deriving (Show)
 
@@ -33,10 +34,10 @@ instance Arbitrary InvalidIPv6Str where
     arbitrary = arbitraryIIPv6Str arbitrary 128
 
 arbitraryIIPv6Str :: Gen IPv6 -> Int -> Gen InvalidIPv6Str
-arbitraryIIPv6Str adrGen msklen = do
-    adr <- adrGen
-    len <- oneof [choose (minBound, -1), choose (msklen + 1, maxBound)]
-    return $ Iv6 $ show adr ++ "/" ++ show len
+arbitraryIIPv6Str adrGen msklen = toIv6 <$> adrGen <*> lenGen
+  where
+    toIv6 adr len = Iv6 $ show adr ++ "/" ++ show len
+    lenGen = oneof [choose (minBound, -1), choose (msklen + 1, maxBound)]
 
 ----------------------------------------------------------------
 --
