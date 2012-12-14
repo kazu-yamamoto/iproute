@@ -207,7 +207,7 @@ dig = 0 <$ char '0'
     toInt n ns = foldl' (\x y -> x * 10 + y) 0 . map digitToInt $ n : ns
 
 ip4 :: Parser IPv4
-ip4 = toIPv4 <$> ip4'
+ip4 = skipSpaces >> toIPv4 <$> ip4'
 
 ip4' :: Parser [Int]
 ip4' = do
@@ -220,6 +220,9 @@ ip4' = do
         let errmsg = "IPv4 adddress"
         when (length as /= 4) (fail errmsg)
         mapM_ (test errmsg) as
+
+skipSpaces :: Parser ()
+skipSpaces = void $ many (char ' ')
 
 ----------------------------------------------------------------
 --
@@ -251,7 +254,7 @@ format bs1 bs2 = do
     return $ bs1 ++ spring ++ bs2
 
 ip6 :: Parser IPv6
-ip6 = toIPv6 <$> ip6'
+ip6 = skipSpaces >> toIPv6 <$> ip6'
 
 ip6' :: Parser [Int]
 ip6' = ip4Embedded

@@ -51,6 +51,10 @@ spec = do
         prop "IPv6" to_str_ipv6
         prop "IPv4 failure" ipv4_fail
         prop "IPv6 failure" ipv6_fail
+        it "can read even if unnecessary spaces exist" $ do
+            (readMay " 127.0.0.1" :: Maybe IPv4) `shouldBe` readMay "127.0.0.1"
+        it "can read even if unnecessary spaces exist" $ do
+            (readMay " ::1" :: Maybe IPv4) `shouldBe` readMay "::1"
 
 to_str_ipv4 :: AddrRange IPv4 -> Bool
 to_str_ipv4 a = readMay (show a) == Just a
