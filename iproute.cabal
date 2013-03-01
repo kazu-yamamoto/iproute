@@ -55,7 +55,7 @@ Test-Suite spec
                       , byteorder
                       , containers
                       , network
-                      , Safe
+                      , safe
 
 Source-Repository head
   Type:                 git
