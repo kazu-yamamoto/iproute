@@ -25,7 +25,7 @@ True
 
 data IP = IPv4 { ipv4 :: IPv4 }
         | IPv6 { ipv6 :: IPv6 }
-        deriving (Eq)
+        deriving (Eq, Ord)
 
 instance Show IP where
     show (IPv4 ip) = show ip
