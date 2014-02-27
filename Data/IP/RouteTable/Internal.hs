@@ -7,7 +7,7 @@
 -}
 module Data.IP.RouteTable.Internal where
 
-import Control.Monad hiding (join)
+import Control.Monad
 import Data.Bits
 import Data.IP.Addr
 import Data.IP.Op
@@ -120,18 +120,18 @@ insert k1 v1 s@(Node k2 tb2 v2 l r)
                   else
                     Node k1 tb1 (Just v1) Nil s
   | otherwise = let n = Node k1 tb1 (Just v1) Nil Nil
-                in join n s
+                in link n s
   where
     tb1 = keyToTestBit k1
 
-join :: Routable k => IPRTable k a -> IPRTable k a -> IPRTable k a
-join s1@(Node k1 _ _ _ _) s2@(Node k2 _ _ _ _)
+link :: Routable k => IPRTable k a -> IPRTable k a -> IPRTable k a
+link s1@(Node k1 _ _ _ _) s2@(Node k2 _ _ _ _)
   | isLeft k1 tbg = Node kg tbg Nothing s1 s2
   | otherwise     = Node kg tbg Nothing s2 s1
   where
     kg = glue 0 k1 k2
     tbg = keyToTestBit kg
-join _ _ = error "join"
+link _ _ = error "link"
 
 glue :: (Routable k) => Int -> AddrRange k -> AddrRange k -> AddrRange k
 glue n k1 k2
