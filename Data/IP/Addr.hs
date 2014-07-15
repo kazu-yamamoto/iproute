@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE CPP #-}
 module Data.IP.Addr where
 
 import Control.Monad
@@ -11,7 +11,9 @@ import Network.Socket
 import System.ByteOrder
 import Text.Appar.String
 import Text.Printf
+#ifdef GENERICS
 import GHC.Generics
+#endif
 
 ----------------------------------------------------------------
 
@@ -27,7 +29,11 @@ True
 
 data IP = IPv4 { ipv4 :: IPv4 }
         | IPv6 { ipv6 :: IPv6 }
+#ifdef GENERICS
         deriving (Eq, Ord, Generic)
+#else
+        deriving (Eq, Ord)
+#endif
 
 instance Show IP where
     show (IPv4 ip) = show ip
