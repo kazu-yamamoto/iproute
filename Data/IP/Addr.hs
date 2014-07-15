@@ -52,7 +52,12 @@ type IPv6Addr = (Word32,Word32,Word32,Word32)
 >>> read "192.0.2.1" :: IPv4
 192.0.2.1
 -}
-newtype IPv4 = IP4 IPv4Addr deriving (Eq, Ord)
+newtype IPv4 = IP4 IPv4Addr
+#ifdef GENERICS
+  deriving (Eq, Ord,Generic)
+#else
+  deriving (Eq, Ord)
+#endif
 
 {-|
   The abstract data type to express an IPv6 address.
@@ -67,7 +72,12 @@ newtype IPv4 = IP4 IPv4Addr deriving (Eq, Ord)
 >>> read "2001:db8::192.0.2.1" :: IPv6
 2001:db8:00:00:00:00:c000:201
 -}
-newtype IPv6 = IP6 IPv6Addr deriving (Eq, Ord)
+newtype IPv6 = IP6 IPv6Addr
+#ifdef GENERICS
+  deriving (Eq, Ord,Generic)
+#else
+  deriving (Eq, Ord)
+#endif
 
 ----------------------------------------------------------------
 --
