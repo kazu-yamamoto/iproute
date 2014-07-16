@@ -32,7 +32,7 @@ Library
                       , network
 
 
-  if impl(ghc >= 7.2.1) 
+  if impl(ghc >= 7.2.1)
     cpp-options:        -DGENERICS
     default-extensions: DeriveGeneric
   if impl(ghc >= 7.2.1) && impl(ghc < 7.6.1)
