@@ -77,7 +77,7 @@ isMatchedTo a r = a `masked` mask r == addr r
 >>> makeAddrRange (toIPv4 [127,0,2,1]) 8
 127.0.0.0/8
 >>> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 8
-2000:00:00:00:00:00:00:00/8
+2000::/8
 -}
 makeAddrRange :: Addr a => a -> Int -> AddrRange a
 makeAddrRange ad len = AddrRange adr msk len

@@ -4,13 +4,13 @@ module Data.IP.Addr where
 import Control.Monad
 import Data.Bits
 import Data.Char
-import Data.List (foldl')
+import Data.List (foldl', intersperse)
 import Data.String
 import Data.Word
 import Network.Socket
+import Numeric (showHex, showInt)
 import System.ByteOrder
 import Text.Appar.String
-import Text.Printf
 #ifdef GENERICS
 import GHC.Generics
 #endif
@@ -64,13 +64,19 @@ newtype IPv4 = IP4 IPv4Addr
   To create this, use 'toIPv6'. Or use 'read' @\"2001:DB8::1\"@ :: 'IPv6', for example. Also, @\"2001:DB8::1\"@ can be used as literal with OverloadedStrings.
 
 >>> read "2001:db8:00:00:00:00:00:01" :: IPv6
-2001:db8:00:00:00:00:00:01
+2001:db8::1
 >>> read "2001:db8:11e:c00::101" :: IPv6
-2001:db8:11e:c00:00:00:00:101
+2001:db8:11e:c00::101
 >>> read "2001:db8:11e:c00:aa:bb:192.0.2.1" :: IPv6
 2001:db8:11e:c00:aa:bb:c000:201
 >>> read "2001:db8::192.0.2.1" :: IPv6
-2001:db8:00:00:00:00:c000:201
+2001:db8::c000:201
+>>> read "0::ffff:192.0.2.1" :: IPv6
+::ffff:192.0.2.1
+>>> read "0::0:c000:201" :: IPv6
+::192.0.2.1
+>>> read "::0.0.0.1" :: IPv6
+::1
 -}
 newtype IPv6 = IP6 IPv6Addr
 #ifdef GENERICS
@@ -85,30 +91,42 @@ newtype IPv6 = IP6 IPv6Addr
 --
 
 instance Show IPv4 where
-    show = showIPv4
+    show ip = showIPv4 ip ""
 
 instance Show IPv6 where
-    show = showIPv6
+    show ip = showIPv6 ip ""
 
-showIPv4 :: IPv4 -> String
-showIPv4 (IP4 a) = show4 a
-  where
-    remQuo x = (x `mod` 256, x `div` 256)
-    show4 q = printf "%d.%d.%d.%d" a1 a2 a3 a4
-      where
-        (a4,q4) = remQuo q
-        (a3,q3) = remQuo q4
-        (a2,q2) = remQuo q3
-        (a1, _) = remQuo q2
+-- | Show an IPv4 address in the dot-decimal notation.
+showIPv4 :: IPv4 -> ShowS
+showIPv4 = foldr1 (.) . intersperse (showChar '.') . map showInt . fromIPv4
 
-showIPv6 :: IPv6 -> String
-showIPv6 (IP6 (a1,a2,a3,a4)) = show6 a1 ++ ":" ++ show6 a2 ++ ":" ++ show6 a3 ++ ":" ++ show6 a4
+-- | Show an IPv6 address in the most appropriate notation, based on recommended
+-- representation proposed by <http://tools.ietf.org/html/rfc5952 RFC 5952>.
+--
+-- /The implementation is completely compatible with the current implementation
+-- of the `inet_ntop` function in glibc./
+showIPv6 :: IPv6 -> ShowS
+showIPv6 ip@(IP6 (a1,a2,a3,a4))
+  -- IPv4-Mapped IPv6 Address
+  | a1 == 0 && a2 == 0 && a3 == 0xffff =
+      showString "::ffff:" . showIPv4 (IP4 a4)
+  -- IPv4-Compatible IPv6 Address (exclude IPRange ::/112)
+  | a1 == 0 && a2 == 0 && a3 == 0 && a4 >= 0x10000 =
+      showString "::" . showIPv4 (IP4 a4)
+  -- length of longest run > 1, replace it with "::"
+  | end - begin > 1 =
+      showFields prefix . showString "::" . showFields suffix
+  -- length of longest run <= 1, don't use "::"
+  | otherwise =
+      showFields fields
   where
-    remQuo x = (x `mod` 65536, x `div` 65536)
-    show6 q = printf "%02x:%02x" r1 r2
-      where
-        (r2,q2) = remQuo q
-        (r1, _) = remQuo q2
+    fields = fromIPv6 ip
+    showFields = foldr (.) id . intersperse (showChar ':') . map showHex
+    prefix = take begin fields  -- fields before "::"
+    suffix = drop end fields    -- fields after "::"
+    begin = end + diff          -- the longest run of zeros
+    (diff, end) = minimum $
+        scanl (\c i -> if i == 0 then c - 1 else 0) 0 fields `zip` [0..]
 
 ----------------------------------------------------------------
 --
@@ -131,7 +149,7 @@ toIPv4 = IP4 . toWord32
   The 'toIPv6' function takes a list of 'Int' and returns 'IPv6'.
 
 >>> toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]
-2001:db8:00:00:00:00:00:01
+2001:db8::1
 -}
 toIPv6 :: [Int] -> IPv6
 toIPv6 ad = IP6 (x1,x2,x3,x4)

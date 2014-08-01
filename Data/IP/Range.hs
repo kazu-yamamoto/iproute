@@ -50,7 +50,7 @@ data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
 >>> read "192.0.2.1/24" :: AddrRange IPv4
 192.0.2.0/24
 >>> read "2001:db8:00:00:00:00:00:01/48" :: AddrRange IPv6
-2001:db8:00:00:00:00:00:00/48
+2001:db8::/48
 -}
 data AddrRange a = AddrRange {
         -- |The 'addr' function returns an address from 'AddrRange'.
