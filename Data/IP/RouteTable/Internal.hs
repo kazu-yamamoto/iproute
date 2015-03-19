@@ -7,6 +7,7 @@
 -}
 module Data.IP.RouteTable.Internal where
 
+import Control.Applicative ((<$>))
 import Control.Monad
 import Data.Bits
 import Data.IP.Addr
@@ -95,6 +96,10 @@ True
 -}
 empty :: Routable k => IPRTable k a
 empty = Nil
+
+instance Functor (IPRTable k) where
+    fmap _ Nil = Nil
+    fmap f (Node r a mv b1 b2) = Node r a (f <$> mv) (fmap f b1) (fmap f b2)
 
 ----------------------------------------------------------------
 
