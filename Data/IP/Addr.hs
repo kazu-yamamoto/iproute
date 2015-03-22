@@ -164,7 +164,7 @@ toIPv6 ad = IP6 (x1,x2,x3,x4)
   The 'toIPv6b' function takes a list of 'Int'
   where each member repserents a single byte and returns 'IPv6'.
 
->>> toIPv6 [0x20,0x01,0xD,0xB8,0,0,0,0,0,0,0,0,0,0,0,1]
+>>> toIPv6b [0x20,0x01,0xD,0xB8,0,0,0,0,0,0,0,0,0,0,0,1]
 2001:db8::1
 -}
 toIPv6b :: [Int] -> IPv6
@@ -206,7 +206,7 @@ fromIPv6 (IP6 (w1, w2, w3, w4)) = map fromEnum (concatMap split [w1,w2,w3,w4])
   The 'fromIPv6b' function converts 'IPv6' to a list of 'Int'
   where each member represents a single byte.
 
->>> fromIPv6 (toIPv6 [0x20,0x01,0xD,0xB8,0,0,0,0,0,0,0,0,0,0,0,1])
+>>> fromIPv6b (toIPv6b [0x20,0x01,0xD,0xB8,0,0,0,0,0,0,0,0,0,0,0,1])
 [32,1,13,184,0,0,0,0,0,0,0,0,0,0,0,1]
 -}
 fromIPv6b :: IPv6 -> [Int]
