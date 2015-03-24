@@ -160,6 +160,22 @@ toIPv6 ad = IP6 (x1,x2,x3,x4)
     toWord32 [a1,a2] = fromIntegral $ shift a1 16 + a2
     toWord32 _       = error "toWord32"
 
+{-|
+  The 'toIPv6b' function takes a list of 'Int'
+  where each member repserents a single byte and returns 'IPv6'.
+
+>>> toIPv6b [0x20,0x01,0xD,0xB8,0,0,0,0,0,0,0,0,0,0,0,1]
+2001:db8::1
+-}
+toIPv6b :: [Int] -> IPv6
+toIPv6b ad = IP6 (x1,x2,x3,x4)
+  where
+    [x1,x2,x3,x4] = map toWord32 $ split4 ad
+    split4 [] = []
+    split4 x  = take 4 x : split4 (drop 4 x)
+    toWord32 [a1,a2,a3,a4] = fromIntegral $ shift a1 24 + shift a2 16 + shift a3 8 + a4
+    toWord32 _       = error "toWord32"
+
 ----------------------------------------------------------------
 --
 -- IPToInt
@@ -185,6 +201,18 @@ fromIPv6 (IP6 (w1, w2, w3, w4)) = map fromEnum (concatMap split [w1,w2,w3,w4])
   where
     split :: Word32 -> [Word32]
     split n = [n `shiftR` 0x10 .&. 0xffff, n .&. 0xffff]
+
+{-|
+  The 'fromIPv6b' function converts 'IPv6' to a list of 'Int'
+  where each member represents a single byte.
+
+>>> fromIPv6b (toIPv6b [0x20,0x01,0xD,0xB8,0,0,0,0,0,0,0,0,0,0,0,1])
+[32,1,13,184,0,0,0,0,0,0,0,0,0,0,0,1]
+-}
+fromIPv6b :: IPv6 -> [Int]
+fromIPv6b (IP6 (w1, w2, w3, w4)) = map fromEnum (concatMap split [w1,w2,w3,w4])
+  where
+    split n = fmap (\s -> n `shiftR` s .&. 0xff) [24,16,8,0]
 
 ----------------------------------------------------------------
 --
