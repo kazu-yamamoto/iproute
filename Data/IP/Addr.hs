@@ -30,9 +30,7 @@ True
 data IP = IPv4 { ipv4 :: IPv4 }
         | IPv6 { ipv6 :: IPv6 }
 #ifdef GENERICS
-        deriving (Ord, Generic)
-#else
-        deriving (Ord)
+        deriving (Generic)
 #endif
 
 {-|
@@ -50,6 +48,10 @@ False
 True
 >>> (read "::ffff:127.0.0.1" :: IP) == (read "127.0.0.9" :: IP)
 False
+>>> (read "::ffff:127.0.0.1" :: IP) >= (read "127.0.0.1" :: IP)
+True
+>>> (read "::ffff:127.0.0.1" :: IP) <= (read "127.0.0.1" :: IP)
+True
 -}
 instance Eq IP where
   (IPv4 ip1) == (IPv4 ip2) = ip1 == ip2
@@ -57,6 +59,12 @@ instance Eq IP where
   (IPv4 ip1) == (IPv6 ip2) = ipv4ToIpv6 ip1 == ip2
   (IPv6 ip1) == (IPv4 ip2) = ip1 == ipv4ToIpv6 ip2
 
+
+instance Ord IP where
+  (IPv4 ip1) `compare` (IPv4 ip2) = ip1 `compare` ip2
+  (IPv6 ip1) `compare` (IPv6 ip2) = ip1 `compare` ip2
+  (IPv4 ip1) `compare` (IPv6 ip2) = ipv4ToIpv6 ip1 `compare` ip2
+  (IPv6 ip1) `compare` (IPv4 ip2) = ip1 `compare` ipv4ToIpv6 ip2
 
 instance Show IP where
     show (IPv4 ip) = show ip
