@@ -137,6 +137,8 @@ ip6range = do
 maskedIPv6 :: IPv6 -> IPv6 -> IPv6
 IP6 (a1,a2,a3,a4) `maskedIPv6` IP6 (m1,m2,m3,m4) = IP6 (a1.&.m1,a2.&.m2,a3.&.m3,a4.&.m4)
 
+
+
 ----------------------------------------------------------------
 --
 -- IsString

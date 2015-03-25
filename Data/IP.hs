@@ -12,7 +12,7 @@ module Data.IP (
   , AddrRange (addr, mask, mlen)
   -- ** Address class
   , Addr (..)
-  , makeAddrRange, (>:>), isMatchedTo, unmakeAddrRange
+  , makeAddrRange, (>:>), isMatchedTo, addrRangePair, ipv4RangeToIpv6
   ) where
 
 import Data.IP.Addr
