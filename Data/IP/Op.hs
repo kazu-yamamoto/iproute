@@ -84,3 +84,16 @@ makeAddrRange ad len = AddrRange adr msk len
   where
     msk = intToMask len
     adr = ad `masked` msk
+
+
+{-|
+  The 'unmakeAddrRange' functions take a 'AddrRange' and
+  returns the network address and a mask length.
+
+>>> unmakeAddrRange ("127.0.0.0/8" :: AddrRange IPv4)
+(127.0.0.0, 8)
+>>> unmakeAddrRange ("2000::/8" :: AddrRange IPv6)
+(2000::,8)
+-}
+unmakeAddrRange :: Addr a => AddrRange a -> (a, Int)
+unmakeAddrRange (AddrRange adr _ len) = (adr, len)
