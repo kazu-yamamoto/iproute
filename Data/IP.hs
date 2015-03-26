@@ -13,7 +13,7 @@ module Data.IP (
   -- ** Address class
   , Addr (..)
   , makeAddrRange, (>:>), isMatchedTo, addrRangePair
-  , ipv4RangeToIpv6, ipv4ToIpv6
+  , ipv4RangeToIPv6, ipv4ToIPv6
   ) where
 
 import Data.IP.Addr

@@ -56,15 +56,15 @@ True
 instance Eq IP where
   (IPv4 ip1) == (IPv4 ip2) = ip1 == ip2
   (IPv6 ip1) == (IPv6 ip2) = ip1 == ip2
-  (IPv4 ip1) == (IPv6 ip2) = ipv4ToIpv6 ip1 == ip2
-  (IPv6 ip1) == (IPv4 ip2) = ip1 == ipv4ToIpv6 ip2
+  (IPv4 ip1) == (IPv6 ip2) = ipv4ToIPv6 ip1 == ip2
+  (IPv6 ip1) == (IPv4 ip2) = ip1 == ipv4ToIPv6 ip2
 
 
 instance Ord IP where
   (IPv4 ip1) `compare` (IPv4 ip2) = ip1 `compare` ip2
   (IPv6 ip1) `compare` (IPv6 ip2) = ip1 `compare` ip2
-  (IPv4 ip1) `compare` (IPv6 ip2) = ipv4ToIpv6 ip1 `compare` ip2
-  (IPv6 ip1) `compare` (IPv4 ip2) = ip1 `compare` ipv4ToIpv6 ip2
+  (IPv4 ip1) `compare` (IPv6 ip2) = ipv4ToIPv6 ip1 `compare` ip2
+  (IPv6 ip1) `compare` (IPv4 ip2) = ip1 `compare` ipv4ToIPv6 ip2
 
 instance Show IP where
     show (IPv4 ip) = show ip
@@ -424,7 +424,7 @@ fixByteOrder s = d1 .|. d2 .|. d3 .|. d4
     d4 = shiftR s 24 .&. 0x000000ff
 
 -- | Convert IPv4 address to IPv4-embedded-in-IPv6
-ipv4ToIpv6 :: IPv4 -> IPv6
-ipv4ToIpv6 ip = toIPv6 [0,0,0,0,0,0xffff, (i1 `shift` 8) .|. i2, (i3 `shift` 8) .|. i4]
+ipv4ToIPv6 :: IPv4 -> IPv6
+ipv4ToIPv6 ip = toIPv6b [0,0,0,0,0,0,0,0,0,0,0xff,0xff,i1,i2,i3,i4]
   where
     [i1,i2,i3,i4] = fromIPv4 ip
