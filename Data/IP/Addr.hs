@@ -129,7 +129,7 @@ instance Enum IPv6 where
                 | i == ip' = []
                 | otherwise = let i' = succ i in i':gen i'
 
-    -- These two are impelemted via the integer enum insance.
+    -- These two are implemented via the integer enum instance.
     -- A more correct implementation would essentially require
     -- implementing instance Num IPv6, which isn't something
     -- I wanna do. Another approach is to use Word128 to store
