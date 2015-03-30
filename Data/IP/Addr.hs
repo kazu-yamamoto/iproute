@@ -11,6 +11,7 @@ import Network.Socket
 import Numeric (showHex, showInt)
 import System.ByteOrder
 import Text.Appar.String
+import GHC.Enum (succError,predError)
 #ifdef GENERICS
 import GHC.Generics
 #endif
@@ -54,9 +55,9 @@ type IPv6Addr = (Word32,Word32,Word32,Word32)
 -}
 newtype IPv4 = IP4 IPv4Addr
 #ifdef GENERICS
-  deriving (Eq, Ord,Generic)
+  deriving (Eq, Ord, Bounded, Generic)
 #else
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Bounded)
 #endif
 
 {-|
@@ -80,10 +81,44 @@ newtype IPv4 = IP4 IPv4Addr
 -}
 newtype IPv6 = IP6 IPv6Addr
 #ifdef GENERICS
-  deriving (Eq, Ord,Generic)
+  deriving (Eq, Ord, Bounded, Generic)
 #else
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Bounded)
 #endif
+
+
+----------------------------------------------------------------
+--
+-- Enum
+--
+
+instance Enum IPv4 where
+    fromEnum (IP4 a) = fromEnum a
+    toEnum = IP4 . toEnum
+
+instance Enum IPv6 where
+    fromEnum (IP6 (a,b,c,d)) = let a' = fromEnum a `shift` 96
+                                   b' = fromEnum b `shift` 64
+                                   c' = fromEnum c `shift` 32
+                                   d' = fromEnum d
+                               in a' .|. b' .|. c' .|. d'
+    toEnum i = let a = toEnum (i `shiftR` 96 .&. 0xffffffff)
+                   b = toEnum (i `shiftR` 64 .&. 0xffffffff)
+                   c = toEnum (i `shiftR` 32 .&. 0xffffffff)
+                   d = toEnum (i             .&. 0xffffffff)
+               in IP6 (a,b,c,d)
+
+    succ (IP6 (0xffffffff,0xffffffff,0xffffffff,0xffffffff)) = succError "IPv6"
+    succ (IP6 (a,         0xffffffff,0xffffffff,0xffffffff)) = IP6 (succ a,0,0,0)
+    succ (IP6 (a,                  b,0xffffffff,0xffffffff)) = IP6 (a,succ b,0,0)
+    succ (IP6 (a,                  b,         c,0xffffffff)) = IP6 (a,b,succ c,0)
+    succ (IP6 (a,                  b,         c,         d)) = IP6 (a,b,c,succ d)
+
+    pred (IP6 (0,0,0,0)) = predError "IPv6"
+    pred (IP6 (a,0,0,0)) = IP6 (pred a, 0xffffffff, 0xffffffff, 0xffffffff)
+    pred (IP6 (a,b,0,0)) = IP6 (     a,     pred b, 0xffffffff, 0xffffffff)
+    pred (IP6 (a,b,c,0)) = IP6 (     a,          b,     pred c, 0xffffffff)
+    pred (IP6 (a,b,c,d)) = IP6 (     a,          b,          c,     pred d)
 
 ----------------------------------------------------------------
 --
