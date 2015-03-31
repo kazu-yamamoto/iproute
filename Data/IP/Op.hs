@@ -1,5 +1,6 @@
 module Data.IP.Op where
 
+import Data.Bits
 import Data.IP.Addr
 import Data.IP.Mask
 import Data.IP.Range
