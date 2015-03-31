@@ -1,6 +1,5 @@
 module Data.IP.Op where
 
-import Data.Bits
 import Data.IP.Addr
 import Data.IP.Mask
 import Data.IP.Range
@@ -29,8 +28,7 @@ instance Addr IPv4 where
     intToMask = maskIPv4
 
 instance Addr IPv6 where
-    IP6 (a1,a2,a3,a4) `masked` IP6 (m1,m2,m3,m4) =
-        IP6 (a1.&.m1,a2.&.m2,a3.&.m3,a4.&.m4)
+    masked    = maskedIPv6
     intToMask = maskIPv6
 
 ----------------------------------------------------------------
