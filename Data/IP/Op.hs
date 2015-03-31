@@ -84,3 +84,25 @@ makeAddrRange ad len = AddrRange adr msk len
   where
     msk = intToMask len
     adr = ad `masked` msk
+
+
+-- | Convert IPv4 range to IPV4-embedded-in-IPV6 range
+ipv4RangeToIPv6 :: AddrRange IPv4 -> AddrRange IPv6
+ipv4RangeToIPv6 range =
+  makeAddrRange (toIPv6 [0,0,0,0,0,0xffff, (i1 `shift` 8) .|. i2, (i3 `shift` 8) .|. i4]) (masklen + 96)
+  where
+    (ip, masklen) = addrRangePair range
+    [i1,i2,i3,i4] = fromIPv4 ip
+
+
+{-|
+  The 'unmakeAddrRange' functions take a 'AddrRange' and
+  returns the network address and a mask length.
+
+>>> addrRangePair ("127.0.0.0/8" :: AddrRange IPv4)
+(127.0.0.0,8)
+>>> addrRangePair ("2000::/8" :: AddrRange IPv6)
+(2000::,8)
+-}
+addrRangePair :: Addr a => AddrRange a -> (a, Int)
+addrRangePair (AddrRange adr _ len) = (adr, len)

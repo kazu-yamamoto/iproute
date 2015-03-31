@@ -30,10 +30,41 @@ True
 data IP = IPv4 { ipv4 :: IPv4 }
         | IPv6 { ipv6 :: IPv6 }
 #ifdef GENERICS
-        deriving (Eq, Ord, Generic)
-#else
-        deriving (Eq, Ord)
+        deriving (Generic)
 #endif
+
+{-|
+  Equality over IP addresses. Correctly compare IPv4 and IPv4-embedded-in-IPv6 addresses.
+
+>>> (read "2001:db8:00:00:00:00:00:01" :: IP) == (read "2001:db8:00:00:00:00:00:01" :: IP)
+True
+>>> (read "2001:db8:00:00:00:00:00:01" :: IP) == (read "2001:db8:00:00:00:00:00:05" :: IP)
+False
+>>> (read "127.0.0.1" :: IP) == (read "127.0.0.1" :: IP)
+True
+>>> (read "127.0.0.1" :: IP) == (read "10.0.0.1" :: IP)
+False
+>>> (read "::ffff:127.0.0.1" :: IP) == (read "127.0.0.1" :: IP)
+True
+>>> (read "::ffff:127.0.0.1" :: IP) == (read "127.0.0.9" :: IP)
+False
+>>> (read "::ffff:127.0.0.1" :: IP) >= (read "127.0.0.1" :: IP)
+True
+>>> (read "::ffff:127.0.0.1" :: IP) <= (read "127.0.0.1" :: IP)
+True
+-}
+instance Eq IP where
+  (IPv4 ip1) == (IPv4 ip2) = ip1 == ip2
+  (IPv6 ip1) == (IPv6 ip2) = ip1 == ip2
+  (IPv4 ip1) == (IPv6 ip2) = ipv4ToIPv6 ip1 == ip2
+  (IPv6 ip1) == (IPv4 ip2) = ip1 == ipv4ToIPv6 ip2
+
+
+instance Ord IP where
+  (IPv4 ip1) `compare` (IPv4 ip2) = ip1 `compare` ip2
+  (IPv6 ip1) `compare` (IPv6 ip2) = ip1 `compare` ip2
+  (IPv4 ip1) `compare` (IPv6 ip2) = ipv4ToIPv6 ip1 `compare` ip2
+  (IPv6 ip1) `compare` (IPv4 ip2) = ip1 `compare` ipv4ToIPv6 ip2
 
 instance Show IP where
     show (IPv4 ip) = show ip
@@ -391,3 +422,9 @@ fixByteOrder s = d1 .|. d2 .|. d3 .|. d4
     d2 = shiftL s  8 .&. 0x00ff0000
     d3 = shiftR s  8 .&. 0x0000ff00
     d4 = shiftR s 24 .&. 0x000000ff
+
+-- | Convert IPv4 address to IPv4-embedded-in-IPv6
+ipv4ToIPv6 :: IPv4 -> IPv6
+ipv4ToIPv6 ip = toIPv6b [0,0,0,0,0,0,0,0,0,0,0xff,0xff,i1,i2,i3,i4]
+  where
+    [i1,i2,i3,i4] = fromIPv4 ip
