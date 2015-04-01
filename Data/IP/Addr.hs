@@ -11,6 +11,7 @@ import Network.Socket
 import Numeric (showHex, showInt)
 import System.ByteOrder
 import Text.Appar.String
+import GHC.Enum (succError,predError)
 #ifdef GENERICS
 import GHC.Generics
 #endif
@@ -85,9 +86,9 @@ type IPv6Addr = (Word32,Word32,Word32,Word32)
 -}
 newtype IPv4 = IP4 IPv4Addr
 #ifdef GENERICS
-  deriving (Eq, Ord,Generic)
+  deriving (Eq, Ord, Bounded, Generic)
 #else
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Bounded)
 #endif
 
 {-|
@@ -111,10 +112,81 @@ newtype IPv4 = IP4 IPv4Addr
 -}
 newtype IPv6 = IP6 IPv6Addr
 #ifdef GENERICS
-  deriving (Eq, Ord,Generic)
+  deriving (Eq, Ord, Bounded, Generic)
 #else
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Bounded)
 #endif
+
+
+----------------------------------------------------------------
+--
+-- Enum
+--
+
+instance Enum IPv4 where
+    fromEnum (IP4 a) = fromEnum a
+    toEnum = IP4 . toEnum
+
+instance Enum IPv6 where
+    -- fromEnum and toEnum are not really useful, but I defined them anyway
+    fromEnum (IP6 (a,b,c,d)) = let a' = fromEnum a `shift` 96
+                                   b' = fromEnum b `shift` 64
+                                   c' = fromEnum c `shift` 32
+                                   d' = fromEnum d
+                               in a' .|. b' .|. c' .|. d'
+    toEnum i = let a = toEnum (i `shiftR` 96 .&. 0xffffffff)
+                   b = toEnum (i `shiftR` 64 .&. 0xffffffff)
+                   c = toEnum (i `shiftR` 32 .&. 0xffffffff)
+                   d = toEnum (i             .&. 0xffffffff)
+               in IP6 (a,b,c,d)
+
+    succ (IP6 (0xffffffff,0xffffffff,0xffffffff,0xffffffff)) = succError "IPv6"
+    succ (IP6 (a,         0xffffffff,0xffffffff,0xffffffff)) = IP6 (succ a,0,0,0)
+    succ (IP6 (a,                  b,0xffffffff,0xffffffff)) = IP6 (a,succ b,0,0)
+    succ (IP6 (a,                  b,         c,0xffffffff)) = IP6 (a,b,succ c,0)
+    succ (IP6 (a,                  b,         c,         d)) = IP6 (a,b,c,succ d)
+
+    pred (IP6 (0,0,0,0)) = predError "IPv6"
+    pred (IP6 (a,0,0,0)) = IP6 (pred a, 0xffffffff, 0xffffffff, 0xffffffff)
+    pred (IP6 (a,b,0,0)) = IP6 (     a,     pred b, 0xffffffff, 0xffffffff)
+    pred (IP6 (a,b,c,0)) = IP6 (     a,          b,     pred c, 0xffffffff)
+    pred (IP6 (a,b,c,d)) = IP6 (     a,          b,          c,     pred d)
+
+    enumFrom ip = ip:gen ip
+        where gen i = let i' = succ i in i':gen i'
+
+    enumFromTo ip ip' = ip:gen ip
+        where gen i
+                | i == ip' = []
+                | otherwise = let i' = succ i in i':gen i'
+
+    -- These two are implemented via the integer enum instance.
+    -- A more correct implementation would essentially require
+    -- implementing instance Num IPv6, which isn't something
+    -- I wanna do. Another approach is to use Word128 to store
+    -- an IPv6 address.
+    enumFromThen ip ip' = fmap integerToIP6 [ip6ToInteger ip, ip6ToInteger ip' ..]
+    enumFromThenTo ip inc fin = fmap integerToIP6 [ip6ToInteger ip, ip6ToInteger inc .. ip6ToInteger fin]
+
+ip6ToInteger :: IPv6 -> Integer
+ip6ToInteger (IP6 (a,b,c,d)) = let a' = word32ToInteger a `shift` 96
+                                   b' = word32ToInteger b `shift` 64
+                                   c' = word32ToInteger c `shift` 32
+                                   d' = word32ToInteger d
+                               in a' .|. b' .|. c' .|. d'
+    where
+        word32ToInteger :: Word32 -> Integer
+        word32ToInteger = toEnum . fromEnum
+
+integerToIP6 :: Integer -> IPv6
+integerToIP6 i = let a = integerToWord32 (i `shiftR` 96 .&. 0xffffffff)
+                     b = integerToWord32 (i `shiftR` 64 .&. 0xffffffff)
+                     c = integerToWord32 (i `shiftR` 32 .&. 0xffffffff)
+                     d = integerToWord32 (i             .&. 0xffffffff)
+                 in IP6 (a,b,c,d)
+    where
+        integerToWord32 :: Integer -> Word32
+        integerToWord32 = toEnum . fromEnum
 
 ----------------------------------------------------------------
 --
