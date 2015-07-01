@@ -9,7 +9,7 @@ module Data.IP (
   , IPv6, toIPv6, toIPv6b, fromIPv6, fromIPv6b, fromHostAddress6, toHostAddress6
   -- ** IP range data
   , IPRange (..)
-  , AddrRange (addr, mask, mlen)
+  , AddrRange (..)
   -- ** Address class
   , Addr (..)
   , makeAddrRange, (>:>), isMatchedTo, addrRangePair
