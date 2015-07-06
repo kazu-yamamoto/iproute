@@ -19,6 +19,7 @@ Library
   Default-Language:     Haskell2010
   GHC-Options:          -Wall
   Exposed-Modules:      Data.IP
+                        Data.IP.Internal
                         Data.IP.RouteTable
   Other-Modules:        Data.IP.Addr
                         Data.IP.Mask
