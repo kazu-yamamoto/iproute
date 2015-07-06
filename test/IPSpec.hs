@@ -1,9 +1,12 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module IPSpec where
 
+#if __GLASGOW_HASKELL__ < 709
 import Control.Applicative
+#endif
 import Data.IP
 import Safe (readMay)
 import Test.Hspec

@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 {-|
   IP routing table is a tree of 'AddrRange'
   to search one of them on the longest
@@ -7,7 +9,9 @@
 -}
 module Data.IP.RouteTable.Internal where
 
+#if __GLASGOW_HASKELL__ < 709
 import Control.Applicative ((<$>),(<*>),pure)
+#endif
 import Control.Monad
 import Data.Bits
 import Data.Foldable (Foldable(..))
