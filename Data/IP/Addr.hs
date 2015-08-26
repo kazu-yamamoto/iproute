@@ -168,6 +168,34 @@ instance Enum IPv6 where
     enumFromThen ip ip' = fmap integerToIP6 [ip6ToInteger ip, ip6ToInteger ip' ..]
     enumFromThenTo ip inc fin = fmap integerToIP6 [ip6ToInteger ip, ip6ToInteger inc .. ip6ToInteger fin]
 
+instance Enum IP where
+    fromEnum (IPv4 ip) = fromEnum ip
+    fromEnum (IPv6 ip) = fromEnum ip
+
+    -- Because Int cannot hold an IPv6 anyway
+    toEnum = IPv4 . toEnum
+
+    succ (IPv4 ip) = IPv4 $ succ ip
+    succ (IPv6 ip) = IPv6 $ succ ip
+
+    pred (IPv4 ip) = IPv4 $ pred ip
+    pred (IPv6 ip) = IPv6 $ pred ip
+
+    enumFrom (IPv4 ip) = fmap IPv4 $ enumFrom ip
+    enumFrom (IPv6 ip) = fmap IPv6 $ enumFrom ip
+
+    enumFromTo (IPv4 ip) (IPv4 ip') = fmap IPv4 $ enumFromTo ip ip'
+    enumFromTo (IPv6 ip) (IPv6 ip') = fmap IPv6 $ enumFromTo ip ip'
+    enumFromTo _ _ = error "enumFromTo: Incompatible IP families"
+
+    enumFromThen (IPv4 ip) (IPv4 ip') = fmap IPv4 $ enumFromThen ip ip'
+    enumFromThen (IPv6 ip) (IPv6 ip') = fmap IPv6 $ enumFromThen ip ip'
+    enumFromThen _ _ = error "enumFromThen: Incompatible IP families"
+
+    enumFromThenTo (IPv4 ip) (IPv4 inc) (IPv4 fin) = fmap IPv4 $ enumFromThenTo ip inc fin
+    enumFromThenTo (IPv6 ip) (IPv6 inc) (IPv6 fin) = fmap IPv6 $ enumFromThenTo ip inc fin
+    enumFromThenTo _ _ _ = error "enumFromThenTo: Incompatible IP families"
+
 ip6ToInteger :: IPv6 -> Integer
 ip6ToInteger (IP6 (a,b,c,d)) = let a' = word32ToInteger a `shift` 96
                                    b' = word32ToInteger b `shift` 64
