@@ -28,9 +28,9 @@ True
 data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
              | IPv6Range { ipv6range :: AddrRange IPv6 }
 #ifdef GENERICS
-        deriving (Eq, Generic)
+        deriving (Eq, Ord, Generic)
 #else
-        deriving (Eq)
+        deriving (Eq, Ord)
 #endif
 
 ----------------------------------------------------------------
