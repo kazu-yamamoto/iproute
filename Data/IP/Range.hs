@@ -9,6 +9,7 @@ import Data.Data (Data)
 import Data.IP.Addr
 import Data.IP.Mask
 import Data.String
+import Data.Typeable (Typeable)
 import Text.Appar.String
 import GHC.Generics
 
@@ -27,7 +28,7 @@ True
 
 data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
              | IPv6Range { ipv6range :: AddrRange IPv6 }
-        deriving (Eq, Ord, Data, Generic)
+        deriving (Eq, Ord, Data, Generic, Typeable)
 
 ----------------------------------------------------------------
 --
@@ -56,7 +57,7 @@ data AddrRange a = AddrRange {
         -- |The 'mlen' function returns a mask length from 'AddrRange'.
       , mlen :: {-# UNPACK #-} !Int
     }
-    deriving (Eq, Ord, Data, Generic)
+    deriving (Eq, Ord, Data, Generic, Typeable)
 
 ----------------------------------------------------------------
 --
