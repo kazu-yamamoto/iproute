@@ -32,13 +32,6 @@ Library
                       , containers
                       , network
 
-
-  if impl(ghc >= 7.2.1)
-    cpp-options:        -DGENERICS
-    default-extensions: DeriveGeneric
-  if impl(ghc >= 7.2.1) && impl(ghc < 7.6.1)
-    build-depends:      ghc-prim >= 0.2
-
 Test-Suite doctest
   Type:                 exitcode-stdio-1.0
   Default-Language:     Haskell2010
