@@ -1,9 +1,11 @@
-{-# LANGUAGE DeriveGeneric  #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
 module Data.IP.Addr where
 
 import Control.Monad
 import Data.Bits
 import Data.Char
+import Data.Data (Data)
 import Data.List (foldl', intersperse)
 import Data.String
 import Data.Word
@@ -28,7 +30,7 @@ True
 
 data IP = IPv4 { ipv4 :: IPv4 }
         | IPv6 { ipv6 :: IPv6 }
-        deriving (Generic)
+        deriving (Data,Generic)
 
 {-|
   Equality over IP addresses. Correctly compare IPv4 and IPv4-embedded-in-IPv6 addresses.
@@ -81,7 +83,7 @@ type IPv6Addr = (Word32,Word32,Word32,Word32)
 192.0.2.1
 -}
 newtype IPv4 = IP4 IPv4Addr
-  deriving (Eq, Ord, Bounded, Generic)
+  deriving (Eq, Ord, Bounded, Data, Generic)
 
 {-|
   The abstract data type to express an IPv6 address.
@@ -103,7 +105,7 @@ newtype IPv4 = IP4 IPv4Addr
 ::1
 -}
 newtype IPv6 = IP6 IPv6Addr
-  deriving (Eq, Ord, Bounded, Generic)
+  deriving (Eq, Ord, Bounded, Data, Generic)
 
 
 ----------------------------------------------------------------
