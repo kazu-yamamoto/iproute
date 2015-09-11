@@ -1,16 +1,17 @@
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE FlexibleInstances  #-}
 module Data.IP.Range where
 
 import Control.Monad
 import Data.Bits
+import Data.Data (Data)
 import Data.IP.Addr
 import Data.IP.Mask
 import Data.String
+import Data.Typeable (Typeable)
 import Text.Appar.String
-#ifdef GENERICS
 import GHC.Generics
-#endif
 
 ----------------------------------------------------------------
 
@@ -27,11 +28,7 @@ True
 
 data IPRange = IPv4Range { ipv4range :: AddrRange IPv4 }
              | IPv6Range { ipv6range :: AddrRange IPv6 }
-#ifdef GENERICS
-        deriving (Eq, Ord, Generic)
-#else
-        deriving (Eq, Ord)
-#endif
+        deriving (Eq, Ord, Data, Generic, Typeable)
 
 ----------------------------------------------------------------
 --
@@ -60,11 +57,7 @@ data AddrRange a = AddrRange {
         -- |The 'mlen' function returns a mask length from 'AddrRange'.
       , mlen :: {-# UNPACK #-} !Int
     }
-#ifdef GENERICS
-    deriving (Eq, Ord, Generic)
-#else
-    deriving (Eq, Ord)
-#endif
+    deriving (Eq, Ord, Data, Generic, Typeable)
 
 ----------------------------------------------------------------
 --
