@@ -19,8 +19,23 @@ class Eq a => Addr a where
     -}
     masked :: a -> a -> a
     {-|
-      The 'intToMask' function takes 'Int' and returns a contiguous
-      mask.
+
+      The 'intToMask' function takes an 'Int' representing the number of bits to
+      be set in the returned contiguous mask. When this integer is positive the
+      bits will be starting from the MSB and from the LSB otherwise.
+
+      >>> intToMask 16 :: IPv4
+      255.255.0.0
+
+      >>> intToMask (-16) :: IPv4
+      0.0.255.255
+
+      >>> intToMask 16 :: IPv6
+      ffff::
+
+      >>> intToMask (-16) :: IPv6
+      ::ffff
+
     -}
     intToMask :: Int -> a
 

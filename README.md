@@ -10,3 +10,5 @@ The algorithm of the IP routing table is described in
 and its PDF is found on the following page:
 
 	http://www.mew.org/~kazu/proj/iproute/en/
+
+[![Build Status](https://travis-ci.org/kazu-yamamoto/iproute.svg?branch=master)](https://travis-ci.org/kazu-yamamoto/iproute)
