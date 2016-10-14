@@ -125,10 +125,11 @@ instance Enum IPv6 where
                                    c' = fromEnum c `shift` 32
                                    d' = fromEnum d
                                in a' .|. b' .|. c' .|. d'
-    toEnum i = let a = toEnum (i `shiftR` 96 .&. 0xffffffff)
-                   b = toEnum (i `shiftR` 64 .&. 0xffffffff)
-                   c = toEnum (i `shiftR` 32 .&. 0xffffffff)
-                   d = toEnum (i             .&. 0xffffffff)
+    toEnum i = let i' = fromIntegral i :: Integer
+                   a = fromIntegral (i' `shiftR` 96 .&. 0xffffffff)
+                   b = fromIntegral (i' `shiftR` 64 .&. 0xffffffff)
+                   c = fromIntegral (i' `shiftR` 32 .&. 0xffffffff)
+                   d = fromIntegral (i'             .&. 0xffffffff)
                in IP6 (a,b,c,d)
 
     succ (IP6 (0xffffffff,0xffffffff,0xffffffff,0xffffffff)) = succError "IPv6"
