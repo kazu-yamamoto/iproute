@@ -5,11 +5,11 @@ module Data.IP (
   -- * Documentation
   -- ** IP data
     IP (..)
-  , IPv4, toIPv4, fromIPv4, fromHostAddress, toHostAddress
-  , IPv6, toIPv6, toIPv6b, fromIPv6, fromIPv6b, fromHostAddress6, toHostAddress6
+  , IPv4 (..), toIPv4, fromIPv4, fromHostAddress, toHostAddress
+  , IPv6 (..), toIPv6, toIPv6b, fromIPv6, fromIPv6b, fromHostAddress6, toHostAddress6
   -- ** IP range data
   , IPRange (..)
-  , AddrRange (addr, mask, mlen)
+  , AddrRange (..)
   -- ** Address class
   , Addr (..)
   , makeAddrRange, (>:>), isMatchedTo, addrRangePair
