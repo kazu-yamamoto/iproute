@@ -212,9 +212,29 @@ Just 133.5.16.0/24
 Just 133.5.16.0/24
 -}
 lookup :: Routable k => AddrRange k -> IPRTable k a -> Maybe a
-lookup k s = search k s Nothing
+lookup k s = fmap snd (search k s Nothing)
 
-search :: Routable k => AddrRange k -> IPRTable k a -> Maybe a -> Maybe a
+{-|
+  The 'lookupKeyValue' function looks up 'IPRTable' with a key of 'AddrRange'.
+  If a routing information in 'IPRTable' matches the key, both key and value
+  are returned.
+
+>>> :set -XOverloadedStrings
+>>> let rt = fromList ([("192.168.0.0/24", 1), ("10.10.0.0/16", 2)] :: [(AddrRange IPv4, Int)])
+>>> lookupKeyValue "127.0.0.1" rt
+Nothing
+>>> lookupKeyValue "192.168.0.1" rt
+Just (192.168.0.0/24,1)
+>>> lookupKeyValue "10.10.0.1" rt
+Just (10.10.0.0/16,2)
+-}
+lookupKeyValue :: Routable k => AddrRange k -> IPRTable k a -> Maybe (AddrRange k, a)
+lookupKeyValue k s = search k s Nothing
+
+search :: Routable k => AddrRange k
+                     -> IPRTable k a
+                     -> Maybe (AddrRange k, a)
+                     -> Maybe (AddrRange k, a)
 search _ Nil res = res
 search k1 (Node k2 tb2 Nothing l r) res
   | k1 == k2  = res
@@ -223,12 +243,12 @@ search k1 (Node k2 tb2 Nothing l r) res
                   else
                     search k1 r res
   | otherwise = res
-search k1 (Node k2 tb2 vl l r) res
-  | k1 == k2  = vl
+search k1 (Node k2 tb2 (Just vl) l r) res
+  | k1 == k2  = Just (k1, vl)
   | k2 >:> k1 = if isLeft k1 tb2 then
-                    search k1 l vl
+                    search k1 l $ Just (k2, vl)
                   else
-                    search k1 r vl
+                    search k1 r $ Just (k2, vl)
   | otherwise = res
 
 ----------------------------------------------------------------
