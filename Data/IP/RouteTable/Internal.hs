@@ -10,9 +10,8 @@
 -}
 module Data.IP.RouteTable.Internal where
 
-#if __GLASGOW_HASKELL__ < 709
-import Control.Applicative ((<$>),(<*>),pure)
-#endif
+import Control.Applicative hiding (empty)
+import qualified Control.Applicative as A (empty)
 import Control.Monad
 import Data.Bits
 import Data.Foldable (Foldable(..))
@@ -266,16 +265,16 @@ search k1 (Node k2 tb2 (Just vl) l r) res
 [(133.4.0.0/16,()),(133.5.0.0/16,()),(133.5.16.0/24,()),(133.5.23.0/24,())]
 -}
 
-findMatch :: MonadPlus m => Routable k => AddrRange k -> IPRTable k a -> m (AddrRange k, a)
-findMatch _ Nil = mzero
+findMatch :: Alternative m => Routable k => AddrRange k -> IPRTable k a -> m (AddrRange k, a)
+findMatch _ Nil = A.empty
 findMatch k1 (Node k2 _ Nothing l r)
-  | k1 >:> k2 = findMatch k1 l `mplus` findMatch k1 r
-  | k2 >:> k1 = findMatch k1 l `mplus` findMatch k1 r
-  | otherwise = mzero
+  | k1 >:> k2 = findMatch k1 l <|> findMatch k1 r
+  | k2 >:> k1 = findMatch k1 l <|> findMatch k1 r
+  | otherwise = A.empty
 findMatch k1 (Node k2 _ (Just vl) l r)
-  | k1 >:> k2 = return (k2, vl) `mplus` findMatch k1 l `mplus` findMatch k1 r
-  | k2 >:> k1 = findMatch k1 l `mplus` findMatch k1 r
-  | otherwise = mzero
+  | k1 >:> k2 = pure (k2, vl) <|> findMatch k1 l <|> findMatch k1 r
+  | k2 >:> k1 = findMatch k1 l <|> findMatch k1 r
+  | otherwise = A.empty
 
 ----------------------------------------------------------------
 
