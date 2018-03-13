@@ -1,4 +1,5 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP           #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 {-|
   IP routing table is a tree of 'AddrRange'
@@ -23,6 +24,7 @@ import qualified Data.IntMap as IM (fromList)
 import Data.Monoid
 import Data.Traversable
 import Data.Word
+import GHC.Generics (Generic, Generic1)
 import Prelude hiding (lookup)
 
 ----------------------------------------------------------------
@@ -90,7 +92,7 @@ intToTBitsIPv6 = IM.fromList $ zip [0..128] bs
 data IPRTable k a =
     Nil
   | Node !(AddrRange k) !k !(Maybe a) !(IPRTable k a) !(IPRTable k a)
-  deriving (Eq, Show)
+  deriving (Eq, Generic, Generic1, Show)
 
 ----------------------------------------------------------------
 
