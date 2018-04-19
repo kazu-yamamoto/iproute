@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
+
 module Data.IP.Addr where
 
 import Control.Monad
@@ -520,3 +521,11 @@ ipv4ToIPv6 :: IPv4 -> IPv6
 ipv4ToIPv6 ip = toIPv6b [0,0,0,0,0,0,0,0,0,0,0xff,0xff,i1,i2,i3,i4]
   where
     [i1,i2,i3,i4] = fromIPv4 ip
+
+-- | Convert 'SockAddr' to 'IP'.
+--
+--   Since: 1.7.4.
+fromSockAddr :: SockAddr -> Maybe (IP, PortNumber)
+fromSockAddr (SockAddrInet  pn   ha)    = Just (IPv4 (fromHostAddress  ha),  pn)
+fromSockAddr (SockAddrInet6 pn _ ha6 _) = Just (IPv6 (fromHostAddress6 ha6), pn)
+fromSockAddr _                          = Nothing

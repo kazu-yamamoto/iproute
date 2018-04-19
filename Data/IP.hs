@@ -10,6 +10,7 @@ module Data.IP (
   , IPv6, toIPv6, toIPv6b, fromIPv6, fromIPv6b, fromHostAddress6, toHostAddress6
   -- ** Converters
   , ipv4ToIPv6
+  , fromSockAddr
   -- * IP range data
   , IPRange (..)
   , AddrRange (addr, mask, mlen)
