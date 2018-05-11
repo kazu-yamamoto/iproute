@@ -301,3 +301,15 @@ toList = foldt toL []
 foldt :: (IPRTable k a -> b -> b) -> b -> IPRTable k a -> b
 foldt _ v Nil = v
 foldt func v rt@(Node _ _ _ l r) = foldt func (foldt func (func rt v) l) r
+
+-- | /O(n)/. Fold the keys and values in the IPRTable using the given
+--   left-associative binary operator.
+--   This function is equivalent to Data.Map.foldlWithKey with necessary to
+--   IPRTable changes.
+foldlWithKey :: (b -> AddrRange k -> a -> b) -> b -> IPRTable k a -> b
+foldlWithKey f zr = go zr
+  where
+    go z Nil = z
+    go z (Node _ _ Nothing l r) = go (go z l) r
+    go z (Node n _ (Just v) l r) = go (f (go z l) n v) r
+{-# INLINE foldlWithKey #-}
