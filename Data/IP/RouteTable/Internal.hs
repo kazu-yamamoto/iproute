@@ -20,7 +20,8 @@ import Data.IP.Op
 import Data.IP.Range
 import Data.IntMap (IntMap, (!))
 import qualified Data.IntMap as IM (fromList)
-import Data.Monoid
+import Data.Monoid hiding ((<>))
+import Data.Semigroup
 import Data.Traversable
 import Data.Word
 import GHC.Generics (Generic, Generic1)
@@ -110,11 +111,22 @@ instance Functor (IPRTable k) where
 
 instance Foldable (IPRTable k) where
     foldMap _ Nil = mempty
-    foldMap f (Node _ _ mv b1 b2) = foldMap f mv <> foldMap f b1 <> foldMap f b2
+    foldMap f (Node _ _ mv b1 b2) = foldMap f mv `mappend` foldMap f b1 `mappend` foldMap f b2
 
 instance Traversable (IPRTable k) where
     traverse _ Nil = pure Nil
     traverse f (Node r a mv b1 b2) = Node r a <$> traverse f mv <*> traverse f b1 <*> traverse f b2
+
+-- | Note that Semigroup and Monoid instances are right-biased.
+--   That is, if both arguments have the same key, the value from the right
+--   argument will be used.
+instance Routable k => Semigroup (IPRTable k a) where
+    a <> b = foldlWithKey (\rt k v -> insert k v rt) a b
+    stimes = stimesIdempotent
+
+instance Routable k => Monoid (IPRTable k a) where
+    mempty = empty
+    mappend = (<>)
 
 ----------------------------------------------------------------
 
