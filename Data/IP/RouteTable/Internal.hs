@@ -325,3 +325,15 @@ foldlWithKey f zr = go zr
     go z (Node _ _ Nothing l r) = go (go z l) r
     go z (Node n _ (Just v) l r) = go (f (go z l) n v) r
 {-# INLINE foldlWithKey #-}
+
+-- | /O(n)/. Fold the keys and values in the IPRTable using the given
+--   right-associative binary operator.
+--   This function is equivalent to Data.Map.foldrWithKey with necessary to
+--   IPRTable changes.
+foldrWithKey :: (AddrRange k -> a -> b -> b) -> b -> IPRTable k a -> b
+foldrWithKey f zr = go zr
+  where
+    go z Nil = z
+    go z (Node _ _ Nothing l r) = go (go z r) l
+    go z (Node n _ (Just v) l r) = go (f n v (go z r)) l
+{-# INLINE foldrWithKey #-}

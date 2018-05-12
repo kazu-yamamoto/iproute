@@ -21,6 +21,7 @@ module Data.IP.RouteTable (
   , findMatch
   , fromList, toList
   , foldlWithKey
+  , foldrWithKey
   ) where
 
 import Data.IP.RouteTable.Internal as I
