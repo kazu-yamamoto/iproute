@@ -120,10 +120,12 @@ instance Traversable (IPRTable k) where
 -- | Note that Semigroup and Monoid instances are right-biased.
 --   That is, if both arguments have the same key, the value from the right
 --   argument will be used.
+--   Since: 1.7.5
 instance Routable k => Semigroup (IPRTable k a) where
     a <> b = foldlWithKey (\rt k v -> insert k v rt) a b
     stimes = stimesIdempotent
 
+-- | Since: 1.7.5
 instance Routable k => Monoid (IPRTable k a) where
     mempty = empty
     mappend = (<>)
@@ -318,6 +320,7 @@ foldt func v rt@(Node _ _ _ l r) = foldt func (foldt func (func rt v) l) r
 --   left-associative binary operator.
 --   This function is equivalent to Data.Map.foldlWithKey with necessary to
 --   IPRTable changes.
+--   Since: 1.7.5
 foldlWithKey :: (b -> AddrRange k -> a -> b) -> b -> IPRTable k a -> b
 foldlWithKey f zr = go zr
   where
@@ -330,6 +333,7 @@ foldlWithKey f zr = go zr
 --   right-associative binary operator.
 --   This function is equivalent to Data.Map.foldrWithKey with necessary to
 --   IPRTable changes.
+--   Since: 1.7.5
 foldrWithKey :: (AddrRange k -> a -> b -> b) -> b -> IPRTable k a -> b
 foldrWithKey f zr = go zr
   where
