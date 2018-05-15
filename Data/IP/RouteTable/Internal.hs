@@ -20,7 +20,8 @@ import Data.IP.Op
 import Data.IP.Range
 import Data.IntMap (IntMap, (!))
 import qualified Data.IntMap as IM (fromList)
-import Data.Monoid
+import Data.Monoid hiding ((<>))
+import Data.Semigroup
 import Data.Traversable
 import Data.Word
 import GHC.Generics (Generic, Generic1)
@@ -110,11 +111,24 @@ instance Functor (IPRTable k) where
 
 instance Foldable (IPRTable k) where
     foldMap _ Nil = mempty
-    foldMap f (Node _ _ mv b1 b2) = foldMap f mv <> foldMap f b1 <> foldMap f b2
+    foldMap f (Node _ _ mv b1 b2) = foldMap f mv `mappend` foldMap f b1 `mappend` foldMap f b2
 
 instance Traversable (IPRTable k) where
     traverse _ Nil = pure Nil
     traverse f (Node r a mv b1 b2) = Node r a <$> traverse f mv <*> traverse f b1 <*> traverse f b2
+
+-- | Note that Semigroup and Monoid instances are right-biased.
+--   That is, if both arguments have the same key, the value from the right
+--   argument will be used.
+--   Since: 1.7.5
+instance Routable k => Semigroup (IPRTable k a) where
+    a <> b = foldlWithKey (\rt k v -> insert k v rt) a b
+    stimes = stimesIdempotent
+
+-- | Since: 1.7.5
+instance Routable k => Monoid (IPRTable k a) where
+    mempty = empty
+    mappend = (<>)
 
 ----------------------------------------------------------------
 
@@ -301,3 +315,29 @@ toList = foldt toL []
 foldt :: (IPRTable k a -> b -> b) -> b -> IPRTable k a -> b
 foldt _ v Nil = v
 foldt func v rt@(Node _ _ _ l r) = foldt func (foldt func (func rt v) l) r
+
+-- | /O(n)/. Fold the keys and values in the IPRTable using the given
+--   left-associative binary operator.
+--   This function is equivalent to Data.Map.foldlWithKey with necessary to
+--   IPRTable changes.
+--   Since: 1.7.5
+foldlWithKey :: (b -> AddrRange k -> a -> b) -> b -> IPRTable k a -> b
+foldlWithKey f zr = go zr
+  where
+    go z Nil = z
+    go z (Node _ _ Nothing l r) = go (go z l) r
+    go z (Node n _ (Just v) l r) = go (f (go z l) n v) r
+{-# INLINE foldlWithKey #-}
+
+-- | /O(n)/. Fold the keys and values in the IPRTable using the given
+--   right-associative binary operator.
+--   This function is equivalent to Data.Map.foldrWithKey with necessary to
+--   IPRTable changes.
+--   Since: 1.7.5
+foldrWithKey :: (AddrRange k -> a -> b -> b) -> b -> IPRTable k a -> b
+foldrWithKey f zr = go zr
+  where
+    go z Nil = z
+    go z (Node _ _ Nothing l r) = go (go z r) l
+    go z (Node n _ (Just v) l r) = go (f n v (go z r)) l
+{-# INLINE foldrWithKey #-}

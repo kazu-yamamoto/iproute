@@ -1,5 +1,5 @@
 Name:                   iproute
-Version:                1.7.4
+Version:                1.7.5
 Author:                 Kazu Yamamoto <kazu@iij.ad.jp>
 Maintainer:             Kazu Yamamoto <kazu@iij.ad.jp>
 License:                BSD3
@@ -31,6 +31,8 @@ Library
                       , byteorder
                       , containers
                       , network
+  if impl(ghc < 8.0)
+     Build-Depends:     semigroups >= 0.17
 
 Test-Suite doctest
   Type:                 exitcode-stdio-1.0
@@ -57,6 +59,8 @@ Test-Suite spec
                       , containers
                       , network
                       , safe
+  if impl(ghc < 8.0)
+     Build-Depends:     semigroups >= 0.17
 
 Source-Repository head
   Type:                 git

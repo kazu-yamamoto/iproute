@@ -20,6 +20,8 @@ module Data.IP.RouteTable (
   , I.lookupKeyValue
   , findMatch
   , fromList, toList
+  , foldlWithKey
+  , foldrWithKey
   ) where
 
 import Data.IP.RouteTable.Internal as I
