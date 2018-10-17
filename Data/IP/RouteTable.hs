@@ -18,6 +18,7 @@ module Data.IP.RouteTable (
   , empty, insert, delete
   , I.lookup
   , I.lookupKeyValue
+  , I.lookupAll
   , findMatch
   , fromList, toList
   , foldlWithKey

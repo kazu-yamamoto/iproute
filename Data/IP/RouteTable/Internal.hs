@@ -266,6 +266,34 @@ search k1 (Node k2 tb2 (Just vl) l r) res
                     search k1 r $ Just (k2, vl)
   | otherwise = res
 
+{-|
+  'lookupAll' is a version of 'lookup' that returns all entries matching the
+   given key, not just the longest match.
+
+>>> :set -XOverloadedStrings
+>>> let rt = fromList ([("192.168.0.0/24", 1), ("10.10.0.0/16", 2), ("10.0.0.0/8", 3)] :: [(AddrRange IPv4, Int)])
+>>> lookupAll "127.0.0.1" rt
+[]
+>>> lookupAll "192.168.0.1" rt
+[(192.168.0.0/24,1)]
+>>> lookupAll "10.10.0.1" rt
+[(10.10.0.0/16,2),(10.0.0.0/8,3)]
+-}
+
+lookupAll :: Routable k => AddrRange k -> IPRTable k a -> [(AddrRange k, a)]
+lookupAll range = go []
+  where
+    go acc Nil = acc
+    go acc (Node k tb Nothing l r)
+      | k == range = acc
+      | k >:> range = go acc $ if isLeft range tb then l else r
+      | otherwise = acc
+    go acc (Node k tb (Just v) l r)
+      | k == range = (k,v):acc
+      | k >:> range = go ((k,v):acc) $ if isLeft range tb then l else r
+      | otherwise = acc
+
+
 ----------------------------------------------------------------
 
 {-|
