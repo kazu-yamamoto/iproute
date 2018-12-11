@@ -405,7 +405,7 @@ ip4' = do
   where
     test errmsg adr = when (adr < 0 || 255 < adr) (fail errmsg)
     check as = do
-        let errmsg = "IPv4 adddress"
+        let errmsg = "IPv4 address"
         when (length as /= 4) (fail errmsg)
         mapM_ (test errmsg) as
 
