@@ -21,11 +21,11 @@ Library
   Exposed-Modules:      Data.IP
                         Data.IP.Internal
                         Data.IP.RouteTable
+                        Data.IP.RouteTable.Internal
   Other-Modules:        Data.IP.Addr
                         Data.IP.Mask
                         Data.IP.Op
                         Data.IP.Range
-                        Data.IP.RouteTable.Internal
   Build-Depends:        base >= 4.6 && < 5
                       , appar
                       , byteorder
@@ -46,7 +46,7 @@ Test-Suite doctest
 Test-Suite spec
   Type:                 exitcode-stdio-1.0
   Default-Language:     Haskell2010
-  Hs-Source-Dirs:       ., test
+  Hs-Source-Dirs:       test
   Ghc-Options:          -Wall
   Main-Is:              Spec.hs
   Other-Modules:        RouteTableSpec
@@ -59,6 +59,7 @@ Test-Suite spec
                       , containers
                       , network
                       , safe
+                      , iproute
   if impl(ghc < 8.0)
      Build-Depends:     semigroups >= 0.17
 
