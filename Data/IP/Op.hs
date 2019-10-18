@@ -67,7 +67,7 @@ False
 a >:> b = mlen a <= mlen b && (addr b `masked` mask a) == addr a
 
 {-|
-  The 'toMatchedTo' function take an 'Addr' address and an 'AddrRange',
+  The 'isMatchedTo' function take an 'Addr' address and an 'AddrRange',
   and returns 'True' if the range contains the address.
 
 >>> ("127.0.2.0" :: IPv4) `isMatchedTo` makeAddrRange "127.0.2.1" 24
