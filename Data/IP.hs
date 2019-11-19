@@ -11,6 +11,7 @@ module Data.IP (
   -- ** Converters
   , ipv4ToIPv6
   , fromSockAddr
+  , toSockAddr
   -- * IP range data
   , IPRange (..)
   , AddrRange (addr, mask, mlen)
