@@ -529,3 +529,10 @@ fromSockAddr :: SockAddr -> Maybe (IP, PortNumber)
 fromSockAddr (SockAddrInet  pn   ha)    = Just (IPv4 (fromHostAddress  ha),  pn)
 fromSockAddr (SockAddrInet6 pn _ ha6 _) = Just (IPv6 (fromHostAddress6 ha6), pn)
 fromSockAddr _                          = Nothing
+
+-- | Convert 'IP' to 'SockAddr'.
+--
+--   Since: 1.7.8.
+toSockAddr :: (IP, PortNumber) -> SockAddr
+toSockAddr (IPv4 addr4, pn) = SockAddrInet  pn   (toHostAddress  addr4)
+toSockAddr (IPv6 addr6, pn) = SockAddrInet6 pn 0 (toHostAddress6 addr6) 0
