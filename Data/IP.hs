@@ -5,9 +5,15 @@ module Data.IP (
   -- * IP data
     IP (..)
   -- ** IPv4
-  , IPv4, toIPv4, fromIPv4, fromHostAddress, toHostAddress
+  , IPv4
+  , toIPv4, toIPv4w
+  , fromIPv4, fromIPv4w
+  , fromHostAddress, toHostAddress
   -- ** IPv6
-  , IPv6, toIPv6, toIPv6b, fromIPv6, fromIPv6b, fromHostAddress6, toHostAddress6
+  , IPv6
+  , toIPv6, toIPv6b, toIPv6w
+  , fromIPv6, fromIPv6b, fromIPv6w
+  , fromHostAddress6, toHostAddress6
   -- ** Converters
   , ipv4ToIPv6
   , fromSockAddr
