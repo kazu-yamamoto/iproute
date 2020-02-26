@@ -33,6 +33,8 @@ Library
                       , network
   if impl(ghc < 8.0)
      Build-Depends:     semigroups >= 0.17
+  if impl(ghc >= 8)
+      Default-Extensions:  Strict StrictData
 
 Test-Suite doctest
   Type:                 exitcode-stdio-1.0
