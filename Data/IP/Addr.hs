@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 
@@ -258,47 +259,105 @@ showIPv6 ip@(IP6 (a1,a2,a3,a4))
 --
 
 {-|
-  The 'toIPv4' function takes a list of 'Int' and returns 'IPv4'.
+  The 'toIPv4' function returns the 'IPv4' address corresponding to the given
+  list of 'Int' octets.  The function is strict in the four elements of the
+  list.  An error is returned if the list has a differnet length.  The input
+  elements are silently truncated to their 8 least-significant bits before they
+  are combined to form the IPv4 address.
 
 >>> toIPv4 [192,0,2,1]
 192.0.2.1
 -}
 toIPv4 :: [Int] -> IPv4
-toIPv4 = IP4 . toWord32
+toIPv4 [a1, a2, a3, a4] = IP4 w
   where
-    toWord32 [a1,a2,a3,a4] = fromIntegral $ shift a1 24 + shift a2 16 + shift a3 8 + a4
-    toWord32 _             = error "toWord32"
+    w = (fromIntegral a1 .&. 0xff) `unsafeShiftL` 24 .|.
+        (fromIntegral a2 .&. 0xff) `unsafeShiftL` 16 .|.
+        (fromIntegral a3 .&. 0xff) `unsafeShiftL`  8 .|.
+        (fromIntegral a4 .&. 0xff)
+toIPv4 _ = error "IPv4 field list length != 4"
+{-# INLINE toIPv4 #-}
 
 {-|
-  The 'toIPv6' function takes a list of 'Int' and returns 'IPv6'.
+  The 'toIPv4w' function constructs the 'IPv4' address corresponding to the
+  given 'Word32' value.  Unlike the 'fromHostAddress' function, it is strict in
+  the input value, which here is in host byte order.
+
+>>> toIPv4w 0xc0000201
+192.0.2.1
+
+@since 1.7.9
+-}
+toIPv4w :: Word32 -> IPv4
+toIPv4w w = IP4 w
+{-# INLINE toIPv4w #-}
+
+{-|
+  The 'toIPv6' function returns the 'IPv6' address corresponding to the given
+  list of eight 16-bit 'Int's.  The function is strict in the eight elements of
+  the list.  An error is returned if the list has a differnet length.  The
+  input elements are in host byte order and are silently truncated to their 16
+  least-signicant bits before they are combined to form the IPv6 address.
 
 >>> toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]
 2001:db8::1
 -}
 toIPv6 :: [Int] -> IPv6
-toIPv6 ad = IP6 (x1,x2,x3,x4)
+toIPv6 [i1,i2,i3,i4,i5,i6,i7,i8] = IP6 (x1,x2,x3,x4)
   where
-    [x1,x2,x3,x4] = map toWord32 $ split2 ad
-    split2 [] = []
-    split2 x  = take 2 x : split2 (drop 2 x)
-    toWord32 [a1,a2] = fromIntegral $ shift a1 16 + a2
-    toWord32 _       = error "toWord32"
+    !x1 = fromIntegral $ (i1 .&. 0xffff) `unsafeShiftL` 16 .|. (i2 .&. 0xffff)
+    !x2 = fromIntegral $ (i3 .&. 0xffff) `unsafeShiftL` 16 .|. (i4 .&. 0xffff)
+    !x3 = fromIntegral $ (i5 .&. 0xffff) `unsafeShiftL` 16 .|. (i6 .&. 0xffff)
+    !x4 = fromIntegral $ (i7 .&. 0xffff) `unsafeShiftL` 16 .|. (i8 .&. 0xffff)
+toIPv6 _ = error "toIPv6 field list length != 8"
+{-# INLINE toIPv6 #-}
 
 {-|
-  The 'toIPv6b' function takes a list of 'Int'
-  where each member repserents a single byte and returns 'IPv6'.
+  The 'toIPv6b' function returns the IPv6 address corresponding to the given
+  list of sixteen 'Int' octets.  The function is strict in the sixteen elements
+  of the list.  An error is returned if the list has a differnet length.  The
+  input elements are silently truncated to their 8 least-signicant bits before
+  they are combined to form the IPv6 address.
 
 >>> toIPv6b [0x20,0x01,0xD,0xB8,0,0,0,0,0,0,0,0,0,0,0,1]
 2001:db8::1
 -}
 toIPv6b :: [Int] -> IPv6
-toIPv6b ad = IP6 (x1,x2,x3,x4)
+toIPv6b [ h11, h12, l11, l12, h21, h22, l21, l22
+        , h31, h32, l31, l32, h41, h42, l41, l42 ] = IP6 (x1,x2,x3,x4)
   where
-    [x1,x2,x3,x4] = map toWord32 $ split4 ad
-    split4 [] = []
-    split4 x  = take 4 x : split4 (drop 4 x)
-    toWord32 [a1,a2,a3,a4] = fromIntegral $ shift a1 24 + shift a2 16 + shift a3 8 + a4
-    toWord32 _       = error "toWord32"
+    !x1 = fromIntegral $ (h11 .&. 0xff) `unsafeShiftL` 24 .|.
+                         (h12 .&. 0xff) `unsafeShiftL` 16 .|.
+                         (l11 .&. 0xff) `unsafeShiftL`  8 .|.
+                         (l12 .&. 0xff)
+    !x2 = fromIntegral $ (h21 .&. 0xff) `unsafeShiftL` 24 .|.
+                         (h22 .&. 0xff) `unsafeShiftL` 16 .|.
+                         (l21 .&. 0xff) `unsafeShiftL`  8 .|.
+                         (l22 .&. 0xff)
+    !x3 = fromIntegral $ (h31 .&. 0xff) `unsafeShiftL` 24 .|.
+                         (h32 .&. 0xff) `unsafeShiftL` 16 .|.
+                         (l31 .&. 0xff) `unsafeShiftL`  8 .|.
+                         (l32 .&. 0xff)
+    !x4 = fromIntegral $ (h41 .&. 0xff) `unsafeShiftL` 24 .|.
+                         (h42 .&. 0xff) `unsafeShiftL` 16 .|.
+                         (l41 .&. 0xff) `unsafeShiftL`  8 .|.
+                         (l42 .&. 0xff)
+toIPv6b _ = error "toIPv6b field list length != 16"
+
+{-|
+  The 'toIPv6w' function constructs the 'IPv6' address corresponding to the
+  given four-tuple of host byte order 'Word32' values.  This function differs
+  from the 'fromHostAddress6' function only in the fact that it is strict in
+  the elements of the tuple.
+
+>>> toIPv6w (0x20010DB8,0x0,0x0,0x1)
+2001:db8::1
+
+@since 1.7.9
+-}
+toIPv6w :: (Word32, Word32, Word32, Word32) -> IPv6
+toIPv6w w@(!_, !_, !_, !_) = IP6 w
+{-# INLINE toIPv6w #-}
 
 ----------------------------------------------------------------
 --
@@ -306,37 +365,80 @@ toIPv6b ad = IP6 (x1,x2,x3,x4)
 --
 
 {-|
-  The 'fromIPv4' function converts 'IPv4' to a list of 'Int'.
+  The 'fromIPv4' function returns the list of four 'Int' octets corresponding
+  to the given 'IPv4' address.
 
 >>> fromIPv4 (toIPv4 [192,0,2,1])
 [192,0,2,1]
 -}
 fromIPv4 :: IPv4 -> [Int]
-fromIPv4 (IP4 w) = map (\n -> fromEnum $ (w `shiftR` n) .&. 0xff) [0o30, 0o20, 0o10, 0o00]
+fromIPv4 (IP4 w) = split w 0o30 : split w 0o20 : split w 0o10 : split w 0 : []
+  where
+    split :: Word32 -> Int -> Int
+    split a n = fromIntegral $ a `unsafeShiftR` n .&. 0xff
+{-# INLINE fromIPv4 #-}
 
 {-|
-  The 'toIPv6' function converts 'IPv6' to a list of 'Int'.
+  The 'fromIPv4w' function returns a single 'Word32' value corresponding to the
+  given the 'IPv4' address.  Unlike the 'toHostAddress' function, the returned
+  value is strictly evaluated, and is not converted to network byte order.
+
+>>> fromIPv4w (toIPv4 [0xc0,0,2,1]) == 0xc0000201
+True
+
+@since 1.7.9
+-}
+fromIPv4w :: IPv4 -> Word32
+fromIPv4w (IP4 !ip4rep) = ip4rep
+{-# INLINE fromIPv4w #-}
+
+{-|
+  The 'fromIPv6' function returns a list eight 'Int's in host byte order
+  corresponding to the eight 16-bit fragments of the given IPv6 address.
 
 >>> fromIPv6 (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1])
 [8193,3512,0,0,0,0,0,1]
 -}
 fromIPv6 :: IPv6 -> [Int]
-fromIPv6 (IP6 (w1, w2, w3, w4)) = map fromEnum (concatMap split [w1,w2,w3,w4])
+fromIPv6 (IP6 (w1, w2, w3, w4)) =
+    split w1 . split w2 . split w3 . split w4 $ []
   where
-    split :: Word32 -> [Word32]
-    split n = [n `shiftR` 0x10 .&. 0xffff, n .&. 0xffff]
+    split :: Word32 -> [Int] -> [Int]
+    split n acc = fromIntegral (n `unsafeShiftR` 0x10 .&. 0xffff) :
+                  fromIntegral (n .&. 0xffff) : acc
+{-# INLINE fromIPv6 #-}
 
 {-|
-  The 'fromIPv6b' function converts 'IPv6' to a list of 'Int'
-  where each member represents a single byte.
+  The 'fromIPv6b' function returns the 16 'Int' octets corresponding
+  to the 16 bytes of the given IPv6 address.
 
 >>> fromIPv6b (toIPv6b [0x20,0x01,0xD,0xB8,0,0,0,0,0,0,0,0,0,0,0,1])
 [32,1,13,184,0,0,0,0,0,0,0,0,0,0,0,1]
 -}
 fromIPv6b :: IPv6 -> [Int]
-fromIPv6b (IP6 (w1, w2, w3, w4)) = map fromEnum (concatMap split [w1,w2,w3,w4])
+fromIPv6b (IP6 (w1, w2, w3, w4)) =
+    split w1 . split w2 . split w3 . split w4 $ []
   where
-    split n = fmap (\s -> n `shiftR` s .&. 0xff) [24,16,8,0]
+    split :: Word32 -> [Int] -> [Int]
+    split n acc = fromIntegral (n `unsafeShiftR` 24 .&. 0xff) :
+                  fromIntegral (n `unsafeShiftR` 16 .&. 0xff) :
+                  fromIntegral (n `unsafeShiftR`  8 .&. 0xff) :
+                  fromIntegral (n .&. 0xff) : acc
+
+{-|
+  The 'fromIPv6w' function returns a four-tuple of 'Word32' values in host byte
+  order corresponding to the given 'IPv6' address.  This is identical to the
+  'toHostAddress6' function, except that the elements of four-tuple are
+  first strictly evaluated.
+
+>>> fromIPv6w (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) == (0x20010DB8, 0, 0, 1)
+True
+
+@since 1.7.9
+-}
+fromIPv6w :: IPv6 -> (Word32, Word32, Word32, Word32)
+fromIPv6w (IP6 ip6rep) = ip6rep
+{-# INLINE fromIPv6w #-}
 
 ----------------------------------------------------------------
 --
