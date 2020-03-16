@@ -26,6 +26,7 @@ Library
   Default-Language:     Haskell2010
   GHC-Options:          -Wall
   Exposed-Modules:      Data.IP
+                        Data.IP.Builder
                         Data.IP.Internal
                         Data.IP.RouteTable
                         Data.IP.RouteTable.Internal
@@ -36,6 +37,7 @@ Library
   Build-Depends:        base >= 4.6 && < 5
                       , appar
                       , byteorder
+                      , bytestring
                       , containers
                       , network
   if impl(ghc < 8.0)
@@ -53,6 +55,7 @@ Test-Suite doctest
                       , doctest >= 0.9.3
                       , appar
                       , byteorder
+                      , bytestring
                       , network
 
 Test-Suite spec
@@ -62,12 +65,14 @@ Test-Suite spec
   Ghc-Options:          -Wall
   Main-Is:              Spec.hs
   Other-Modules:        RouteTableSpec
+                      , BuilderSpec
                       , IPSpec
   Build-Depends:        base >= 4.6 && < 5
                       , hspec
                       , QuickCheck
                       , appar
                       , byteorder
+                      , bytestring
                       , containers
                       , network
                       , safe
