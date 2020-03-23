@@ -62,14 +62,14 @@ ipv4Bounded =
 -- relative to the "best gap", i.e.  the left-most longest run of zeros. The
 -- "hi" and, or "lo" parts are accompanied by occasional units mapped to colons.
 --
-data FF = CHL {-# UNPACK #-} ! Word32  -- ^ :<h>:<l>
-        | HL  {-# UNPACK #-} ! Word32  -- ^  <h>:<l>
-        | NOP                          -- ^  nop
-        | COL                          -- ^ :
-        | CLO {-# UNPACK #-} ! Word32  -- ^     :<l>
-        | CC                           -- ^ :   :
-        | CHC {-# UNPACK #-} ! Word32  -- ^ :<h>:
-        | HC  {-# UNPACK #-} ! Word32  -- ^  <h>:
+data FF = CHL ! Word32  -- ^ :<h>:<l>
+        | HL  ! Word32  -- ^  <h>:<l>
+        | NOP           -- ^  nop
+        | COL           -- ^ :
+        | CC            -- ^ :   :
+        | CLO ! Word32  -- ^     :<l>
+        | CHC ! Word32  -- ^ :<h>:
+        | HC  ! Word32  -- ^  <h>:
 
 -- Build an IPv6 address in conformance with
 -- [RFC5952](http://tools.ietf.org/html/rfc5952 RFC 5952).
@@ -113,33 +113,16 @@ ipv6Bounded =
     --
     output32 :: P.BoundedPrim FF
     output32 =
-        P.condB ffCond03
-          ( P.condB ffCond01
-               ( P.condB ffCond0
-                   build_CHL        -- :<h>:<l>
-                   build_HL )       -- <h>:<l>
-               ( P.condB ffCond2
-                   build_NOP        -- nop
-                   build_COL ) )    -- :
-          ( P.condB ffCond45
-               ( P.condB ffCond4
-                   build_CLO        -- :<l>
-                   build_CC  )      -- :   :
-               ( P.condB ffCond6
-                   build_CHC        -- :<h>:
-                   build_HC ) )     -- <h>:
+        P.condB (\case { CHL _ -> True; _ -> False }) build_CHL $ -- :hi:lo
+        P.condB (\case { HL _  -> True; _ -> False }) build_HL  $ --  hi:lo
+        P.condB (\case { NOP   -> True; _ -> False }) build_NOP $ --
+        P.condB (\case { COL   -> True; _ -> False }) build_COL $ -- :
+        P.condB (\case { CC    -> True; _ -> False }) build_CC  $ -- :  :
+        P.condB (\case { CLO _ -> True; _ -> False }) build_CLO $ --    :lo
+        P.condB (\case { CHC _ -> True; _ -> False }) build_CHC $ -- :hi:
+                                                      build_HC    --  hi:
 
-    -- Branch selection predicates
-    ffCond03 = \case { CHL _ -> True; HL  _ -> True;
-                       NOP   -> True; COL   -> True; _ -> False }
-    ffCond01 = \case { CHL _ -> True; HL  _ -> True; _ -> False }
-    ffCond45 = \case { CC    -> True; CLO _ -> True; _ -> False }
-    ffCond0  = \case { CHL _ -> True;                _ -> False }
-    ffCond2  = \case { NOP   -> True;                _ -> False }
-    ffCond4  = \case { CLO _ -> True;                _ -> False }
-    ffCond6  = \case { CHC _ -> True;                _ -> False }
-
-    -- encoders for the seven field format (FF) cases.
+    -- encoders for the eight field format (FF) cases.
     --
     build_CHL = (\ (CHL w) -> ( fstUnit (hi16 w), fstUnit (lo16 w) ) )
                 >$< (colsep >*< P.word16Hex)
