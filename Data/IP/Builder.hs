@@ -1,6 +1,8 @@
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MagicHash #-}
+{-# LANGUAGE StrictData #-}
+{-# LANGUAGE NoStrict #-}
 {-# LANGUAGE TupleSections #-}
 
 module Data.IP.Builder
@@ -43,7 +45,6 @@ toB :: P.FixedPrim a -> P.BoundedPrim a
 toB = P.liftFixedToBounded
 {-# INLINE toB #-}
 
-{-# INLINE ipv4Bounded #-}
 ipv4Bounded :: P.BoundedPrim Word32
 ipv4Bounded =
     quads >$< ((P.word8Dec >*< dotsep) >*< (P.word8Dec >*< dotsep))
@@ -57,24 +58,23 @@ ipv4Bounded =
     {-# INLINE qfin #-}
     dotsep = const 0x2e >$< toB P.word8
 
--- | For each of the 32-bit chunks of an IPv6 address, encode how it should be
--- displayed in the presentation form of the address, based its location
--- relative to the "best gap", i.e.  the left-most longest run of zeros. The
--- "hi" and, or "lo" parts are accompanied by occasional units mapped to colons.
+-- | For each 32-bit chunk of an IPv6 address, encode its display format in the
+-- presentation form of the address, based on its location relative to the
+-- "best gap", i.e. the left-most longest run of zeros. The "hi" (H) and/or
+-- "lo" (L) 16 bits may be accompanied by colons (C) on the left and/or right.
 --
-data FF = CHL !Word32  -- ^ :<h>:<l>
-        | HL  !Word32  -- ^  <h>:<l>
-        | NOP          -- ^  nop
-        | COL          -- ^ :
-        | CC           -- ^ :   :
-        | CLO !Word32  -- ^     :<l>
-        | CHC !Word32  -- ^ :<h>:
-        | HC  !Word32  -- ^  <h>:
+data FF = CHL Word32  -- ^ :<h>:<l>
+        | HL  Word32  -- ^  <h>:<l>
+        | NOP         -- ^  nop
+        | COL         -- ^ :
+        | CC          -- ^ :   :
+        | CLO Word32  -- ^     :<l>
+        | CHC Word32  -- ^ :<h>:
+        | HC  Word32  -- ^  <h>:
 
 -- Build an IPv6 address in conformance with
 -- [RFC5952](http://tools.ietf.org/html/rfc5952 RFC 5952).
 --
-{-# INLINE ipv6Bounded #-}
 ipv6Bounded :: P.BoundedPrim (Word32, Word32, Word32, Word32)
 ipv6Bounded =
     P.condB generalCase
