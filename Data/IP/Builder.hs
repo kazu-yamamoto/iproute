@@ -62,14 +62,14 @@ ipv4Bounded =
 -- relative to the "best gap", i.e.  the left-most longest run of zeros. The
 -- "hi" and, or "lo" parts are accompanied by occasional units mapped to colons.
 --
-data FF = CHL ! Word32  -- ^ :<h>:<l>
-        | HL  ! Word32  -- ^  <h>:<l>
-        | NOP           -- ^  nop
-        | COL           -- ^ :
-        | CC            -- ^ :   :
-        | CLO ! Word32  -- ^     :<l>
-        | CHC ! Word32  -- ^ :<h>:
-        | HC  ! Word32  -- ^  <h>:
+data FF = CHL !Word32  -- ^ :<h>:<l>
+        | HL  !Word32  -- ^  <h>:<l>
+        | NOP          -- ^  nop
+        | COL          -- ^ :
+        | CC           -- ^ :   :
+        | CLO !Word32  -- ^     :<l>
+        | CHC !Word32  -- ^ :<h>:
+        | HC  !Word32  -- ^  <h>:
 
 -- Build an IPv6 address in conformance with
 -- [RFC5952](http://tools.ietf.org/html/rfc5952 RFC 5952).
