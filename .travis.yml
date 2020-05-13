@@ -2,13 +2,11 @@
 
 # The following enables several GHC versions to be tested; often it's enough to test only against the last release in a major GHC version. Feel free to omit lines listings versions you don't need/want testing for.
 env:
- - CABALVER=1.18 GHCVER=7.8.4
- - CABALVER=1.22 GHCVER=7.10.3
  - CABALVER=1.24 GHCVER=8.0.2
  - CABALVER=2.0  GHCVER=8.2.2
  - CABALVER=2.2  GHCVER=8.4.2
  - CABALVER=2.4  GHCVER=8.6.5
- - CABALVER=3.0  GHCVER=8.8.2
+ - CABALVER=3.0  GHCVER=8.8.3
  - CABALVER=head GHCVER=head   # see section about GHC HEAD snapshots
 
 matrix:
@@ -37,4 +35,4 @@ script:
  - cabal configure --enable-tests --enable-benchmarks -v2  # -v2 provides useful information for debugging
  - cabal build   # this builds all libraries and executables (including tests/benchmarks)
  - cabal test
- - case $GHCVER in 8.*) cabal check;; esac
+ - cabal check
