@@ -18,6 +18,7 @@ class Eq a => Addr a where
       mask and returned a masked 'Addr'.
     -}
     masked :: a -> a -> a
+
     {-|
 
       The 'intToMask' function takes an 'Int' representing the number of bits to
@@ -39,13 +40,21 @@ class Eq a => Addr a where
     -}
     intToMask :: Int -> a
 
+    {-|
+      The 'bitwiseOr' function takes a couple of 'Addr' and returned a the bitwise OR 'Addr' result.
+    -}
+
+    bitwiseOR :: a -> a -> a
+
 instance Addr IPv4 where
     masked    = maskedIPv4
+    bitwiseOR = bitwiseORIPv4
     intToMask = maskIPv4
 
 instance Addr IPv6 where
     masked    = maskedIPv6
     intToMask = maskIPv6
+    bitwiseOR = bitwiseORIPv6
 
 ----------------------------------------------------------------
 
