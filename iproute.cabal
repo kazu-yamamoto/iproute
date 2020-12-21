@@ -34,7 +34,7 @@ Library
                         Data.IP.Mask
                         Data.IP.Op
                         Data.IP.Range
-  Build-Depends:        base >= 4.6 && < 5
+  Build-Depends:        base >= 4.9 && < 5
                       , appar
                       , byteorder
                       , bytestring
