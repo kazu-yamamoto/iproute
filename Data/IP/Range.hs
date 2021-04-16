@@ -116,6 +116,10 @@ ip4range = do
 maskedIPv4 :: IPv4 -> IPv4 -> IPv4
 IP4 a `maskedIPv4` IP4 m = IP4 (a .&. m)
 
+bitwiseORIPv4 :: IPv4 -> IPv4 -> IPv4
+IP4 a `bitwiseORIPv4` IP4 m = IP4 (a .|. m)
+
+
 ip6range :: Parser (AddrRange IPv6)
 ip6range = do
     ip <- ip6
@@ -130,6 +134,8 @@ ip6range = do
 maskedIPv6 :: IPv6 -> IPv6 -> IPv6
 IP6 (a1,a2,a3,a4) `maskedIPv6` IP6 (m1,m2,m3,m4) = IP6 (a1.&.m1,a2.&.m2,a3.&.m3,a4.&.m4)
 
+bitwiseORIPv6 :: IPv6 -> IPv6 -> IPv6
+IP6 (a1,a2,a3,a4) `bitwiseORIPv6` IP6 (m1,m2,m3,m4) = IP6 (a1.|.m1,a2.|.m2,a3.|.m3,a4.|.m4)
 
 
 ----------------------------------------------------------------

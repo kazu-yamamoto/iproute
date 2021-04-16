@@ -1,0 +1,16 @@
+resolver: lts-16.18
+
+packages:
+- '.'
+
+extra-deps: []
+
+flags:
+
+extra-package-dbs: []
+
+extra-include-dirs: []
+
+extra-lib-dirs: []
+
+rebuild-ghc-options: true
