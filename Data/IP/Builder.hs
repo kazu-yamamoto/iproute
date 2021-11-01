@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MagicHash #-}
@@ -52,9 +53,9 @@ ipv4Bounded =
   where
     quads a = ((qdot 0o30# a, qdot 0o20# a), (qdot 0o10# a, qfin a))
     {-# INLINE quads #-}
-    qdot s (W32# a) = (W8# ((a `uncheckedShiftRL#` s) `and#` 0xff##), ())
+    qdot s (W32# a) = (W8# (wordToWord8Compat# ((word32ToWordCompat# a `uncheckedShiftRL#` s) `and#` 0xff##)), ())
     {-# INLINE qdot #-}
-    qfin (W32# a) = W8# (a `and#` 0xff##)
+    qfin (W32# a) = W8# (wordToWord8Compat# (word32ToWordCompat# a `and#` 0xff##))
     {-# INLINE qfin #-}
     dotsep = const 0x2e >$< toB P.word8
 
@@ -124,11 +125,13 @@ ipv6Bounded =
 
     -- encoders for the eight field format (FF) cases.
     --
-    build_CHL = (\ (CHL w) -> ( fstUnit (hi16 w), fstUnit (lo16 w) ) )
+    build_CHL = ( \ case CHL w -> ( fstUnit (hi16 w), fstUnit (lo16 w) )
+                         _     -> undefined )
                 >$< (colsep >*< P.word16Hex)
                 >*< (colsep >*< P.word16Hex)
     --
-    build_HL  = (\ (HL  w) -> ( hi16 w, fstUnit (lo16 w) ) )
+    build_HL  = ( \ case HL  w -> ( hi16 w, fstUnit (lo16 w) )
+                         _     -> undefined )
                 >$< P.word16Hex >*< colsep >*< P.word16Hex
     --
     build_NOP  = P.emptyB
@@ -137,13 +140,16 @@ ipv6Bounded =
     --
     build_CC   = const ((), ()) >$< colsep >*< colsep
     --
-    build_CLO = (\ (CLO w) -> fstUnit (lo16 w) )
+    build_CLO = ( \ case CLO w -> fstUnit (lo16 w)
+                         _     -> undefined )
                 >$< colsep >*< P.word16Hex
     --
-    build_CHC = (\ (CHC w) -> fstUnit (sndUnit (hi16 w)) )
+    build_CHC = ( \ case CHC w -> fstUnit (sndUnit (hi16 w))
+                         _     -> undefined )
                 >$< colsep >*< P.word16Hex >*< colsep
     --
-    build_HC  = (\ (HC  w) -> sndUnit (hi16 w))
+    build_HC  = ( \ case HC  w -> sndUnit (hi16 w)
+                         _     -> undefined )
                 >$< P.word16Hex >*< colsep
 
     -- static encoders
@@ -156,8 +162,8 @@ ipv6Bounded =
 
     -- | Helpers
     hi16, lo16 :: Word32 -> Word16
-    hi16 !(W32# w) = W16# (w `uncheckedShiftRL#` 16#)
-    lo16 !(W32# w) = W16# (w `and#` 0xffff##)
+    hi16 !(W32# w) = W16# (wordToWord16Compat# (word32ToWordCompat# w `uncheckedShiftRL#` 16#))
+    lo16 !(W32# w) = W16# (wordToWord16Compat# (word32ToWordCompat# w `and#` 0xffff##))
     --
     fstUnit :: a -> ((), a)
     fstUnit = ((), )
@@ -212,14 +218,14 @@ ipv6Bounded =
 bestgap :: Word32 -> Word32 -> Word32 -> Word32 -> (Int, Int)
 bestgap !(W32# a0) !(W32# a1) !(W32# a2) !(W32# a3) =
     finalGap
-        (updateGap (0xffff##     `and#` a3)
-        (updateGap (0xffff0000## `and#` a3)
-        (updateGap (0xffff##     `and#` a2)
-        (updateGap (0xffff0000## `and#` a2)
-        (updateGap (0xffff##     `and#` a1)
-        (updateGap (0xffff0000## `and#` a1)
-        (updateGap (0xffff##     `and#` a0)
-        (initGap   (0xffff0000## `and#` a0)))))))))
+        (updateGap (0xffff##     `and#` (word32ToWordCompat# a3))
+        (updateGap (0xffff0000## `and#` (word32ToWordCompat# a3))
+        (updateGap (0xffff##     `and#` (word32ToWordCompat# a2))
+        (updateGap (0xffff0000## `and#` (word32ToWordCompat# a2))
+        (updateGap (0xffff##     `and#` (word32ToWordCompat# a1))
+        (updateGap (0xffff0000## `and#` (word32ToWordCompat# a1))
+        (updateGap (0xffff##     `and#` (word32ToWordCompat# a0))
+        (initGap   (0xffff0000## `and#` (word32ToWordCompat# a0))))))))))
   where
 
     -- The state after the first input word is always i' = 7,
@@ -252,3 +258,23 @@ bestgap !(W32# a0) !(W32# a1) !(W32# a2) !(W32# a3) =
                       s = e -# g
                    in (I# s, I# e)
 {-# INLINE bestgap #-}
+
+#if MIN_VERSION_base(4,16,0)
+word32ToWordCompat# :: Word32# -> Word#
+word32ToWordCompat# = word32ToWord#
+
+wordToWord8Compat# :: Word# -> Word8#
+wordToWord8Compat# = wordToWord8#
+
+wordToWord16Compat# :: Word# -> Word16#
+wordToWord16Compat# = wordToWord16#
+#else
+word32ToWordCompat# :: Word# -> Word#
+word32ToWordCompat# x = x
+
+wordToWord8Compat# :: Word# -> Word#
+wordToWord8Compat# x = x
+
+wordToWord16Compat# :: Word# -> Word#
+wordToWord16Compat# x = x
+#endif
