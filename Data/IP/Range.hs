@@ -1,10 +1,11 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE FlexibleInstances  #-}
 module Data.IP.Range where
 
-import Control.Monad
 import Data.Bits
+import Data.Char
 import Data.Data (Data)
 import Data.IP.Addr
 import Data.IP.Mask
@@ -102,16 +103,26 @@ parseIPv6Range cs = case runParser ip6range cs of
     (Nothing,_)    -> []
     (Just a6,rest) -> [(a6,rest)]
 
+maskLen :: Int -> Parser Int
+maskLen maxLen = do
+  hasSlash <- option False $ True <$ char '/'
+  if hasSlash
+    then 0 <$ char '0'
+      <|> (toInt =<< (:) <$> oneOf ['1'..'9'] <*> many digit)
+    else return maxLen
+  where
+    toInt ds = maybe (fail "mask length") pure $ foldr go Just ds 0
+    go !d !f !n =
+      let n' = n * 10 + ord d - 48
+      in  if n' <= maxLen then f n' else Nothing
+
 ip4range :: Parser (AddrRange IPv4)
 ip4range = do
     ip <- ip4
-    len <- option 32 $ char '/' >> dig
-    check len
+    len <- maskLen 32
     let msk = maskIPv4 len
         adr = ip `maskedIPv4` msk
     return $ AddrRange adr msk len
-  where
-    check len = when (len < 0 || 32 < len) (fail "IPv4 mask length")
 
 maskedIPv4 :: IPv4 -> IPv4 -> IPv4
 IP4 a `maskedIPv4` IP4 m = IP4 (a .&. m)
@@ -119,13 +130,10 @@ IP4 a `maskedIPv4` IP4 m = IP4 (a .&. m)
 ip6range :: Parser (AddrRange IPv6)
 ip6range = do
     ip <- ip6
-    len <- option 128 $ char '/' >> dig
-    check len
+    len <- maskLen 128
     let msk = maskIPv6 len
         adr = ip `maskedIPv6` msk
     return $ AddrRange adr msk len
-  where
-    check len = when (len < 0 || 128 < len) (fail ("IPv6 mask length: " ++ show len))
 
 maskedIPv6 :: IPv6 -> IPv6 -> IPv6
 IP6 (a1,a2,a3,a4) `maskedIPv6` IP6 (m1,m2,m3,m4) = IP6 (a1.&.m1,a2.&.m2,a3.&.m3,a4.&.m4)
