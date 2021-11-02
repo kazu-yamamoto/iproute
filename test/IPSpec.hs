@@ -56,8 +56,12 @@ spec = do
         prop "IPv6 failure" ipv6_fail
         it "can read even if unnecessary spaces exist" $ do
             (readMay " 127.0.0.1" :: Maybe IPv4) `shouldBe` readMay "127.0.0.1"
+        it "does not read overflow IPv4 octets" $ do
+            (readMay "127.0.0.18446744073709551617" :: Maybe IPv4) `shouldBe` Nothing
         it "can read even if unnecessary spaces exist" $ do
             (readMay " ::1" :: Maybe IPv4) `shouldBe` readMay "::1"
+        it "does not read overflow mask lengths" $ do
+            (readMay "192.168.0.1/18446744073709551648" :: Maybe (AddrRange IPv4)) `shouldBe` Nothing
 
 to_str_ipv4 :: AddrRange IPv4 -> Bool
 to_str_ipv4 a = readMay (show a) == Just a
