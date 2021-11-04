@@ -490,26 +490,23 @@ instance IsString IPv6 where
 -- IPv4 Parser
 --
 
-dig :: Parser Int
-dig = 0 <$ char '0'
-  <|> toInt <$> oneOf ['1'..'9'] <*> many digit
+octet :: Parser Int
+octet = 0 <$ char '0'
+  <|> (toInt =<< (:) <$> oneOf ['1'..'9'] <*> many digit)
   where
-    toInt n ns = foldl' (\x y -> x * 10 + y) 0 . map digitToInt $ n : ns
+    toInt ds = maybe (fail "IPv4 address") pure $ foldr go Just ds 0
+    go !d !f !n =
+      let n' = n * 10 + ord d - 48
+      in  if n' <= 255 then f n' else Nothing
 
 ip4 :: Parser IPv4
 ip4 = skipSpaces >> toIPv4 <$> ip4'
 
 ip4' :: Parser [Int]
 ip4' = do
-    as <- dig `sepBy1` char '.'
-    check as
+    as <- octet `sepBy1` char '.'
+    when (length as /= 4) (fail "IPv4 address")
     return as
-  where
-    test errmsg adr = when (adr < 0 || 255 < adr) (fail errmsg)
-    check as = do
-        let errmsg = "IPv4 address"
-        when (length as /= 4) (fail errmsg)
-        mapM_ (test errmsg) as
 
 skipSpaces :: Parser ()
 skipSpaces = void $ many (char ' ')
