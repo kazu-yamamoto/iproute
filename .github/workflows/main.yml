@@ -1,4 +1,4 @@
-name: ci
+name: Haskell CI
 on:
   push:
     branches:
