@@ -45,19 +45,6 @@ Library
   if impl(ghc >= 8)
       Default-Extensions:  Strict StrictData
 
-Test-Suite doctest
-  Type:                 exitcode-stdio-1.0
-  Default-Language:     Haskell2010
-  HS-Source-Dirs:       test
-  Ghc-Options:          -threaded -Wall
-  Main-Is:              doctests.hs
-  Build-Depends:        base >= 4.6 && < 5
-                      , doctest >= 0.9.3
-                      , appar
-                      , byteorder
-                      , bytestring
-                      , network
-
 Test-Suite spec
   Type:                 exitcode-stdio-1.0
   Default-Language:     Haskell2010

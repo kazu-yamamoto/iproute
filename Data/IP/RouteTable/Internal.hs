@@ -27,6 +27,9 @@ import Data.Word
 import GHC.Generics (Generic, Generic1)
 import Prelude hiding (lookup)
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
 ----------------------------------------------------------------
 
 {-|
