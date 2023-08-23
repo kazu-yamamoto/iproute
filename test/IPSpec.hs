@@ -7,7 +7,10 @@ module IPSpec where
 #if __GLASGOW_HASKELL__ < 709
 import Control.Applicative
 #endif
+import Control.Monad  (replicateM)
 import Data.IP
+import Data.List (intercalate)
+import Data.Maybe (fromMaybe)
 import Safe (readMay)
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
@@ -42,6 +45,21 @@ arbitraryIIPv6Str adrGen msklen = toIv6 <$> adrGen <*> lenGen
     toIv6 adr len = Iv6 $ show adr ++ "/" ++ show len
     lenGen = oneof [choose (minBound, -1), choose (msklen + 1, maxBound)]
 
+data PaddedIPv4 = PaddedIPv4 [Int] [Int]
+
+instance Show PaddedIPv4 where
+  show (PaddedIPv4 pads digs) = intercalate "." $ zipWith (\p d -> replicate p '0' <> show d) pads digs
+
+unpad :: PaddedIPv4 -> PaddedIPv4
+unpad (PaddedIPv4 _ ds) = PaddedIPv4 [0, 0, 0, 0] ds
+
+instance Arbitrary PaddedIPv4 where
+  arbitrary = PaddedIPv4 <$> replicateM 4 (choose (0, 4)) <*> replicateM 4 (choose (0, 255))
+  shrink (PaddedIPv4 pads digs) = (PaddedIPv4 <$> shrinkQuad pads <*> pure digs) <> (PaddedIPv4 pads <$> shrinkQuad digs)
+    where
+      shrinkQuad [0, 0, 0, 0] = []
+      shrinkQuad xs = traverse (\d -> case d of 0 -> [0]; x -> shrink x) xs
+
 ----------------------------------------------------------------
 --
 -- Spec
@@ -54,6 +72,7 @@ spec = do
         prop "IPv6" to_str_ipv6
         prop "IPv4 failure" ipv4_fail
         prop "IPv6 failure" ipv6_fail
+        prop "Padded IPv4" padded_ipv4
         it "can read even if unnecessary spaces exist" $ do
             (readMay " 127.0.0.1" :: Maybe IPv4) `shouldBe` readMay "127.0.0.1"
         it "does not read overflow IPv4 octets" $ do
@@ -74,3 +93,6 @@ ipv4_fail (Iv4 a) = (readMay a :: Maybe (AddrRange IPv4)) == Nothing
 
 ipv6_fail :: InvalidIPv6Str -> Bool
 ipv6_fail (Iv6 a) = (readMay a :: Maybe (AddrRange IPv6)) == Nothing
+
+padded_ipv4 :: PaddedIPv4 -> Bool
+padded_ipv4 padded = fromMaybe False $ (==) <$> (readMay (show padded) :: Maybe IPv4) <*> readMay (show (unpad padded))

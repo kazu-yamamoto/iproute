@@ -491,8 +491,7 @@ instance IsString IPv6 where
 --
 
 octet :: Parser Int
-octet = 0 <$ char '0'
-  <|> (toInt =<< (:) <$> oneOf ['1'..'9'] <*> many digit)
+octet = toInt =<< many digit
   where
     toInt ds = maybe (fail "IPv4 address") pure $ foldr go Just ds 0
     go !d !f !n =
