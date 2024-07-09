@@ -500,16 +500,29 @@ octet = 0 <$ char '0'
       in  if n' <= 255 then f n' else Nothing
 
 ip4 :: Parser IPv4
-ip4 = skipSpaces >> toIPv4 <$> ip4'
+ip4 = skipSpaces >> toIPv4 <$> ip4' True
 
-ip4' :: Parser [Int]
-ip4' = do
-    as <- octet `sepBy1` char '.'
-    when (length as /= 4) (fail "IPv4 address")
+ip4' :: Bool -> Parser [Int]
+ip4' checkTermination = do
+    a0 <- octet
+    _ <- char '.'
+    a1 <- octet
+    _ <- char '.'
+    a2 <- octet
+    _ <- char '.'
+    a3 <- octet
+    let as = [a0, a1, a2, a3]
+    skipSpaces
+    when checkTermination termination
     return as
 
 skipSpaces :: Parser ()
 skipSpaces = void $ many (char ' ')
+
+termination :: Parser ()
+termination = P $ \str -> case str of
+                            [] -> (Just (), "")
+                            _  -> (Nothing, str)
 
 ----------------------------------------------------------------
 --
@@ -562,16 +575,16 @@ ip6' = ip4Embedded
 ip4Embedded :: Parser [Int]
 ip4Embedded = try (do colon2
                       bs <- beforeEmbedded
-                      embedded <- ip4'
+                      embedded <- ip4' True
                       format [] (bs ++ ip4ToIp6 embedded))
               -- matches 2001:db8::192.0.2.1
           <|> try (do bs1 <- manyTill (try $ hex <* char ':') (char ':')
                       bs2 <- option [] beforeEmbedded
-                      embedded <- ip4'
+                      embedded <- ip4' True
                       format bs1 (bs2 ++ ip4ToIp6 embedded))
               -- matches 2001:db8:11e:c00:aa:bb:192.0.2.1
           <|> try (do bs <- beforeEmbedded
-                      embedded <- ip4'
+                      embedded <- ip4' True
                       let rs = bs ++ ip4ToIp6 embedded
                       check rs
                       return rs)
