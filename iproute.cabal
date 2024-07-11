@@ -1,6 +1,6 @@
 cabal-version: >=1.10
 name:          iproute
-version:       1.7.12
+version:       1.7.13
 license:       BSD3
 license-file:  LICENSE
 maintainer:    Kazu Yamamoto <kazu@iij.ad.jp>
