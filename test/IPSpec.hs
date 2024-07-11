@@ -23,7 +23,13 @@ import RouteTableSpec ()
 data InvalidIPv4Str = Iv4 String deriving (Show)
 
 instance Arbitrary InvalidIPv4Str where
-    arbitrary = arbitraryIIPv4Str arbitrary 32
+    arbitrary = 
+        frequency [(9, arbitraryIIPv4Str arbitrary 32)
+                  ,(1, Iv4 . (++ ".") . show <$> genIPv4)
+                  ]
+      where
+        genIPv4 :: Gen IPv4
+        genIPv4 = arbitrary
 
 arbitraryIIPv4Str :: Gen IPv4 -> Int -> Gen InvalidIPv4Str
 arbitraryIIPv4Str adrGen msklen = toIv4 <$> adrGen <*> lenGen

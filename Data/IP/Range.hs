@@ -118,7 +118,8 @@ maskLen maxLen = do
 
 ip4range :: Parser (AddrRange IPv4)
 ip4range = do
-    ip <- ip4
+    skipSpaces
+    ip <- toIPv4 <$> ip4' False
     len <- maskLen 32
     let msk = maskIPv4 len
         adr = ip `maskedIPv4` msk
