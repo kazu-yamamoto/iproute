@@ -512,8 +512,8 @@ ip4' checkTermination = do
     _ <- char '.'
     a3 <- octet
     let as = [a0, a1, a2, a3]
-    skipSpaces
-    when checkTermination termination
+    when checkTermination $
+      skipSpaces >> termination
     return as
 
 skipSpaces :: Parser ()
