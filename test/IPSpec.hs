@@ -24,8 +24,11 @@ data InvalidIPv4Str = Iv4 String deriving (Show)
 
 instance Arbitrary InvalidIPv4Str where
     arbitrary = 
-        frequency [(9, arbitraryIIPv4Str arbitrary 32)
+        frequency [(8, arbitraryIIPv4Str arbitrary 32)
+                   -- an IPv4 address should not end with a trailing `.`
                   ,(1, Iv4 . (++ ".") . show <$> genIPv4)
+                   -- an IPv4 address with mask should not include a white space
+                  ,(1, (\ip (NonNegative len) -> Iv4 (show ip ++ " /" ++ show (len :: Integer))) <$> genIPv4 <*> arbitrary)
                   ]
       where
         genIPv4 :: Gen IPv4
