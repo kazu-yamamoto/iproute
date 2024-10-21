@@ -554,37 +554,43 @@ format bs1 bs2 = do
     return $ bs1 ++ spring ++ bs2
 
 ip6 :: Parser IPv6
-ip6 = skipSpaces >> toIPv6 <$> ip6'
+ip6 = ip6' True
 
-ip6' :: Parser [Int]
-ip6' = ip4Embedded
-   <|> do colon2
-          bs <- option [] hexcolon
-          format [] bs
-   <|> try (do rs <- hexcolon
-               check rs
-               return rs)
-   <|> do bs1 <- hexcolon2
-          bs2 <- option [] hexcolon
-          format bs1 bs2
+ip6' :: Bool -> Parser IPv6
+ip6' checkTermination = skipSpaces >> toIPv6 <$> ip6arr
   where
-    hexcolon = hex `sepBy1` char ':'
-    hexcolon2 = manyTill (hex <* char ':') (char ':')
-    check bs = when (length bs /= 8) (fail "IPv6 address4")
+    ip6arr = ip4Embedded' checkTermination
+       <|> do colon2
+              bs <- option [] hexcolon
+              format [] bs
+       <|> try (do rs <- hexcolon
+                   check rs
+                   return rs)
+       <|> do bs1 <- hexcolon2
+              bs2 <- option [] hexcolon
+              format bs1 bs2
+      where
+        hexcolon = hex `sepBy1` char ':'
+        hexcolon2 = manyTill (hex <* char ':') (char ':')
+        check bs = when (length bs /= 8) (fail "IPv6 address4")
 
 ip4Embedded :: Parser [Int]
-ip4Embedded = try (do colon2
+ip4Embedded = ip4Embedded' True
+
+ip4Embedded' :: Bool -> Parser [Int]
+ip4Embedded' checkTermination =
+              try (do colon2
                       bs <- beforeEmbedded
-                      embedded <- ip4' True
+                      embedded <- ip4' checkTermination
                       format [] (bs ++ ip4ToIp6 embedded))
               -- matches 2001:db8::192.0.2.1
           <|> try (do bs1 <- manyTill (try $ hex <* char ':') (char ':')
                       bs2 <- option [] beforeEmbedded
-                      embedded <- ip4' True
+                      embedded <- ip4' checkTermination
                       format bs1 (bs2 ++ ip4ToIp6 embedded))
               -- matches 2001:db8:11e:c00:aa:bb:192.0.2.1
           <|> try (do bs <- beforeEmbedded
-                      embedded <- ip4' True
+                      embedded <- ip4' checkTermination
                       let rs = bs ++ ip4ToIp6 embedded
                       check rs
                       return rs)

@@ -130,7 +130,7 @@ IP4 a `maskedIPv4` IP4 m = IP4 (a .&. m)
 
 ip6range :: Parser (AddrRange IPv6)
 ip6range = do
-    ip <- ip6
+    ip <- ip6' False
     len <- maskLen 128
     let msk = maskIPv6 len
         adr = ip `maskedIPv6` msk

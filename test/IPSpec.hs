@@ -8,6 +8,7 @@ module IPSpec where
 import Control.Applicative
 #endif
 import Data.IP
+import Data.Maybe (isJust)
 import Safe (readMay)
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
@@ -71,6 +72,8 @@ spec = do
             (readMay " ::1" :: Maybe IPv4) `shouldBe` readMay "::1"
         it "does not read overflow mask lengths" $ do
             (readMay "192.168.0.1/18446744073709551648" :: Maybe (AddrRange IPv4)) `shouldBe` Nothing
+        it "can read embedded v4 in v6 range" $ do
+            (readMay "::ffff:192.0.2.0/120" :: Maybe (AddrRange IPv6)) `shouldSatisfy` isJust
 
 to_str_ipv4 :: AddrRange IPv4 -> Bool
 to_str_ipv4 a = readMay (show a) == Just a
