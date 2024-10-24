@@ -1,40 +1,43 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE StrictData #-}
-{-# LANGUAGE NoStrict #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE NoStrict #-}
 
-module Data.IP.Builder
-    ( -- * 'P.BoundedPrim' 'B.Builder's for general, IPv4 and IPv6 addresses.
-      ipBuilder
-    , ipv4Builder
-    , ipv6Builder
-    ) where
+module Data.IP.Builder (
+    -- * 'P.BoundedPrim' 'B.Builder's for general, IPv4 and IPv6 addresses.
+    ipBuilder,
+    ipv4Builder,
+    ipv6Builder,
+) where
 
 import qualified Data.ByteString.Builder as B
+import Data.ByteString.Builder.Prim ((>$<), (>*<))
 import qualified Data.ByteString.Builder.Prim as P
-import           Data.ByteString.Builder.Prim ((>$<), (>*<))
-import           GHC.Exts
-import           GHC.Word (Word8(..), Word16(..), Word32(..))
+import GHC.Exts
+import GHC.Word (Word16 (..), Word32 (..), Word8 (..))
 
-import           Data.IP.Addr
+import Data.IP.Addr
 
 ------------ IP builders
 
 {-# INLINE ipBuilder #-}
+
 -- | 'P.BoundedPrim' bytestring 'B.Builder' for general 'IP' addresses.
 ipBuilder :: IP -> B.Builder
 ipBuilder (IPv4 addr) = ipv4Builder addr
 ipBuilder (IPv6 addr) = ipv6Builder addr
 
 {-# INLINE ipv4Builder #-}
+
 -- | 'P.BoundedPrim' bytestring 'B.Builder' for 'IPv4' addresses.
 ipv4Builder :: IPv4 -> B.Builder
 ipv4Builder addr = P.primBounded ipv4Bounded $! fromIPv4w addr
 
 {-# INLINE ipv6Builder #-}
+
 -- | 'P.BoundedPrim' bytestring 'B.Builder' for 'IPv6' addresses.
 ipv6Builder :: IPv6 -> B.Builder
 ipv6Builder addr = P.primBounded ipv6Bounded $! fromIPv6w addr
@@ -48,12 +51,17 @@ toB = P.liftFixedToBounded
 
 ipv4Bounded :: P.BoundedPrim Word32
 ipv4Bounded =
-    quads >$< ((P.word8Dec >*< dotsep) >*< (P.word8Dec >*< dotsep))
-          >*< ((P.word8Dec >*< dotsep) >*< P.word8Dec)
+    quads
+        >$< ((P.word8Dec >*< dotsep) >*< (P.word8Dec >*< dotsep))
+            >*< ((P.word8Dec >*< dotsep) >*< P.word8Dec)
   where
     quads a = ((qdot 0o30# a, qdot 0o20# a), (qdot 0o10# a, qfin a))
     {-# INLINE quads #-}
-    qdot s (W32# a) = (W8# (wordToWord8Compat# ((word32ToWordCompat# a `uncheckedShiftRL#` s) `and#` 0xff##)), ())
+    qdot s (W32# a) =
+        ( W8#
+            (wordToWord8Compat# ((word32ToWordCompat# a `uncheckedShiftRL#` s) `and#` 0xff##))
+        , ()
+        )
     {-# INLINE qdot #-}
     qfin (W32# a) = W8# (wordToWord8Compat# (word32ToWordCompat# a `and#` 0xff##))
     {-# INLINE qfin #-}
@@ -63,27 +71,40 @@ ipv4Bounded =
 -- presentation form of the address, based on its location relative to the
 -- "best gap", i.e. the left-most longest run of zeros. The "hi" (H) and/or
 -- "lo" (L) 16 bits may be accompanied by colons (C) on the left and/or right.
---
-data FF = CHL Word32  -- ^ :<h>:<l>
-        | HL  Word32  -- ^  <h>:<l>
-        | NOP         -- ^  nop
-        | COL         -- ^ :
-        | CC          -- ^ :   :
-        | CLO Word32  -- ^     :<l>
-        | CHC Word32  -- ^ :<h>:
-        | HC  Word32  -- ^  <h>:
+data FF
+    = -- | :<h>:<l>
+      CHL Word32
+    | -- |  <h>:<l>
+      HL Word32
+    | -- |  nop
+      NOP
+    | -- | :
+      COL
+    | -- | :   :
+      CC
+    | -- |     :<l>
+      CLO Word32
+    | -- | :<h>:
+      CHC Word32
+    | -- |  <h>:
+      HC Word32
 
 -- Build an IPv6 address in conformance with
 -- [RFC5952](http://tools.ietf.org/html/rfc5952 RFC 5952).
 --
 ipv6Bounded :: P.BoundedPrim (Word32, Word32, Word32, Word32)
 ipv6Bounded =
-    P.condB generalCase
-      ( genFields >$< output128 )
-      ( P.condB v4mapped
-          ( pairPair >$< (colsep >*< colsep)
-                     >*< (ffff >*< (fstUnit >$< colsep >*< ipv4Bounded)) )
-          ( pairPair >$< (P.emptyB >*< colsep) >*< (colsep >*< ipv4Bounded) ) )
+    P.condB
+        generalCase
+        (genFields >$< output128)
+        ( P.condB
+            v4mapped
+            ( pairPair
+                >$< (colsep >*< colsep)
+                    >*< (ffff >*< (fstUnit >$< colsep >*< ipv4Bounded))
+            )
+            (pairPair >$< (P.emptyB >*< colsep) >*< (colsep >*< ipv4Bounded))
+        )
   where
     -- The boundedPrim switches and predicates need to be inlined for best
     -- performance, gaining a factor of ~2 in throughput in tests.
@@ -114,43 +135,58 @@ ipv6Bounded =
     --
     output32 :: P.BoundedPrim FF
     output32 =
-        P.condB (\case { CHL _ -> True; _ -> False }) build_CHL $ -- :hi:lo
-        P.condB (\case { HL _  -> True; _ -> False }) build_HL  $ --  hi:lo
-        P.condB (\case { NOP   -> True; _ -> False }) build_NOP $ --
-        P.condB (\case { COL   -> True; _ -> False }) build_COL $ -- :
-        P.condB (\case { CC    -> True; _ -> False }) build_CC  $ -- :  :
-        P.condB (\case { CLO _ -> True; _ -> False }) build_CLO $ --    :lo
-        P.condB (\case { CHC _ -> True; _ -> False }) build_CHC $ -- :hi:
-                                                      build_HC    --  hi:
+        P.condB (\case CHL _ -> True; _ -> False) build_CHL $ -- :hi:lo
+            P.condB (\case HL _ -> True; _ -> False) build_HL $ --  hi:lo
+                P.condB (\case NOP -> True; _ -> False) build_NOP $ --
+                    P.condB (\case COL -> True; _ -> False) build_COL $ -- :
+                        P.condB (\case CC -> True; _ -> False) build_CC $ -- :  :
+                            P.condB (\case CLO _ -> True; _ -> False) build_CLO $ --    :lo
+                                P.condB (\case CHC _ -> True; _ -> False) build_CHC $ -- :hi:
+                                    build_HC --  hi:
 
     -- encoders for the eight field format (FF) cases.
     --
-    build_CHL = ( \ case CHL w -> ( fstUnit (hi16 w), fstUnit (lo16 w) )
-                         _     -> undefined )
-                >$< (colsep >*< P.word16Hex)
+    build_CHL =
+        ( \case
+            CHL w -> (fstUnit (hi16 w), fstUnit (lo16 w))
+            _ -> undefined
+        )
+            >$< (colsep >*< P.word16Hex)
                 >*< (colsep >*< P.word16Hex)
     --
-    build_HL  = ( \ case HL  w -> ( hi16 w, fstUnit (lo16 w) )
-                         _     -> undefined )
-                >$< P.word16Hex >*< colsep >*< P.word16Hex
+    build_HL =
+        ( \case
+            HL w -> (hi16 w, fstUnit (lo16 w))
+            _ -> undefined
+        )
+            >$< P.word16Hex >*< colsep >*< P.word16Hex
     --
-    build_NOP  = P.emptyB
+    build_NOP = P.emptyB
     --
-    build_COL  = const () >$< colsep
+    build_COL = const () >$< colsep
     --
-    build_CC   = const ((), ()) >$< colsep >*< colsep
+    build_CC = const ((), ()) >$< colsep >*< colsep
     --
-    build_CLO = ( \ case CLO w -> fstUnit (lo16 w)
-                         _     -> undefined )
-                >$< colsep >*< P.word16Hex
+    build_CLO =
+        ( \case
+            CLO w -> fstUnit (lo16 w)
+            _ -> undefined
+        )
+            >$< colsep >*< P.word16Hex
     --
-    build_CHC = ( \ case CHC w -> fstUnit (sndUnit (hi16 w))
-                         _     -> undefined )
-                >$< colsep >*< P.word16Hex >*< colsep
+    build_CHC =
+        ( \case
+            CHC w -> fstUnit (sndUnit (hi16 w))
+            _ -> undefined
+        )
+            >$< colsep >*< P.word16Hex >*< colsep
     --
-    build_HC  = ( \ case HC  w -> sndUnit (hi16 w)
-                         _     -> undefined )
-                >$< P.word16Hex >*< colsep
+    build_HC =
+        ( \case
+            HC w -> sndUnit (hi16 w)
+            _ -> undefined
+        )
+            >$< P.word16Hex >*< colsep
 
     -- static encoders
     --
@@ -160,16 +196,16 @@ ipv6Bounded =
     ffff :: P.BoundedPrim a
     ffff = toB $ const 0xffff >$< P.word16HexFixed
 
-    -- | Helpers
+    -- \| Helpers
     hi16, lo16 :: Word32 -> Word16
     hi16 !(W32# w) = W16# (wordToWord16Compat# (word32ToWordCompat# w `uncheckedShiftRL#` 16#))
     lo16 !(W32# w) = W16# (wordToWord16Compat# (word32ToWordCompat# w `and#` 0xffff##))
     --
     fstUnit :: a -> ((), a)
-    fstUnit = ((), )
+    fstUnit = ((),)
     --
     sndUnit :: a -> (a, ())
-    sndUnit = (, ())
+    sndUnit = (,())
     --
     pairPair (a, b, c, d) = ((a, b), (c, d))
 
@@ -184,54 +220,66 @@ ipv6Bounded =
 
     makeF0 (I# gapStart) (I# gapEnd) !w =
         case (gapEnd ==# 0#) `orI#` (gapStart ># 1#) of
-        1#                               -> HL  w
-        _  -> case gapStart ==# 0# of
-              1#                         -> COL
-              _                          -> HC  w
+            1# -> HL w
+            _ -> case gapStart ==# 0# of
+                1# -> COL
+                _ -> HC w
     {-# INLINE makeF0 #-}
 
     makeF12 (I# gapStart) (I# gapEnd) il ir !w =
         case (gapEnd <=# il) `orI#` (gapStart ># ir) of
-        1#                               -> CHL w
-        _ -> case gapStart >=# il of
-             1# -> case gapStart ==# il of
-                   1#                    -> COL
-                   _                     -> CHC w
-             _  -> case gapEnd ==# ir of
-                   0#                    -> NOP
-                   _                     -> CLO w
+            1# -> CHL w
+            _ -> case gapStart >=# il of
+                1# -> case gapStart ==# il of
+                    1# -> COL
+                    _ -> CHC w
+                _ -> case gapEnd ==# ir of
+                    0# -> NOP
+                    _ -> CLO w
     {-# INLINE makeF12 #-}
 
     makeF3 (I# gapStart) (I# gapEnd) !w =
         case gapEnd <=# 6# of
-        1#                               -> CHL w
-        _ -> case gapStart ==# 6# of
-             0# -> case gapEnd ==# 8# of
-                   1#                    -> COL
-                   _                     -> CLO w
-             _                           -> CC
+            1# -> CHL w
+            _ -> case gapStart ==# 6# of
+                0# -> case gapEnd ==# 8# of
+                    1# -> COL
+                    _ -> CLO w
+                _ -> CC
     {-# INLINE makeF3 #-}
 
 -- | Unrolled and inlined calculation of the first longest
 -- run (gap) of 16-bit aligned zeros in the input address.
---
 bestgap :: Word32 -> Word32 -> Word32 -> Word32 -> (Int, Int)
 bestgap !(W32# a0) !(W32# a1) !(W32# a2) !(W32# a3) =
     finalGap
-        (updateGap (0xffff##     `and#` (word32ToWordCompat# a3))
-        (updateGap (0xffff0000## `and#` (word32ToWordCompat# a3))
-        (updateGap (0xffff##     `and#` (word32ToWordCompat# a2))
-        (updateGap (0xffff0000## `and#` (word32ToWordCompat# a2))
-        (updateGap (0xffff##     `and#` (word32ToWordCompat# a1))
-        (updateGap (0xffff0000## `and#` (word32ToWordCompat# a1))
-        (updateGap (0xffff##     `and#` (word32ToWordCompat# a0))
-        (initGap   (0xffff0000## `and#` (word32ToWordCompat# a0))))))))))
+        ( updateGap
+            (0xffff## `and#` (word32ToWordCompat# a3))
+            ( updateGap
+                (0xffff0000## `and#` (word32ToWordCompat# a3))
+                ( updateGap
+                    (0xffff## `and#` (word32ToWordCompat# a2))
+                    ( updateGap
+                        (0xffff0000## `and#` (word32ToWordCompat# a2))
+                        ( updateGap
+                            (0xffff## `and#` (word32ToWordCompat# a1))
+                            ( updateGap
+                                (0xffff0000## `and#` (word32ToWordCompat# a1))
+                                ( updateGap
+                                    (0xffff## `and#` (word32ToWordCompat# a0))
+                                    (initGap (0xffff0000## `and#` (word32ToWordCompat# a0)))
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
   where
-
     -- The state after the first input word is always i' = 7,
     -- but if the input word is zero, then also g=z=1 and e'=7.
     initGap :: Word# -> Int#
-    initGap w = case w of { 0## -> 0x1717#; _ -> 0x0707# }
+    initGap w = case w of 0## -> 0x1717#; _ -> 0x0707#
 
     -- Update the nibbles of g|e'|z|i' based on the next input
     -- word.  We always decrement i', reset z on non-zero input,
@@ -239,13 +287,14 @@ bestgap !(W32# a0) !(W32# a1) !(W32# a2) !(W32# a3) =
     -- we replace g|e' with z|i'.
     updateGap :: Word# -> Int# -> Int#
     updateGap w g = case w `neWord#` 0## of
-        1# -> (g +# 0xffff#) `andI#` 0xff0f#  -- g, e, 0, --i
-        _  -> let old = g +# 0xf#             -- ++z, --i
-                  zi  = old `andI#` 0xff#
-                  new = (zi `uncheckedIShiftL#` 8#) `orI#` zi
-               in case new ># old of
-                  1# -> new            -- z, i, z, i
-                  _  -> old            -- g, e, z, i
+        1# -> (g +# 0xffff#) `andI#` 0xff0f# -- g, e, 0, --i
+        _ ->
+            let old = g +# 0xf# -- ++z, --i
+                zi = old `andI#` 0xff#
+                new = (zi `uncheckedIShiftL#` 8#) `orI#` zi
+             in case new ># old of
+                    1# -> new -- z, i, z, i
+                    _ -> old -- g, e, z, i
 
     -- Extract gap start and end from the nibbles of g|e'|z|i'
     -- where g is the gap width and e' is 8 minus its end.
@@ -253,10 +302,11 @@ bestgap !(W32# a0) !(W32# a1) !(W32# a2) !(W32# a3) =
     finalGap i =
         let g = i `uncheckedIShiftRL#` 12#
          in case g <# 2# of
-            1# -> (0, 0)
-            _  -> let e = 8# -# ((i `uncheckedIShiftRL#` 8#) `andI#` 0xf#)
-                      s = e -# g
-                   in (I# s, I# e)
+                1# -> (0, 0)
+                _ ->
+                    let e = 8# -# ((i `uncheckedIShiftRL#` 8#) `andI#` 0xf#)
+                        s = e -# g
+                     in (I# s, I# e)
 {-# INLINE bestgap #-}
 
 #if MIN_VERSION_base(4,16,0)

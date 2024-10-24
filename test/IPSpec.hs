@@ -24,13 +24,19 @@ import RouteTableSpec ()
 data InvalidIPv4Str = Iv4 String deriving (Show)
 
 instance Arbitrary InvalidIPv4Str where
-    arbitrary = 
-        frequency [(8, arbitraryIIPv4Str arbitrary 32)
-                   -- an IPv4 address should not end with a trailing `.`
-                  ,(1, Iv4 . (++ ".") . show <$> genIPv4)
-                   -- an IPv4 address with mask should not include a white space
-                  ,(1, (\ip (NonNegative len) -> Iv4 (show ip ++ " /" ++ show (len :: Integer))) <$> genIPv4 <*> arbitrary)
-                  ]
+    arbitrary =
+        frequency
+            [ (8, arbitraryIIPv4Str arbitrary 32)
+            , -- an IPv4 address should not end with a trailing `.`
+              (1, Iv4 . (++ ".") . show <$> genIPv4)
+            , -- an IPv4 address with mask should not include a white space
+
+                ( 1
+                , (\ip (NonNegative len) -> Iv4 (show ip ++ " /" ++ show (len :: Integer)))
+                    <$> genIPv4
+                    <*> arbitrary
+                )
+            ]
       where
         genIPv4 :: Gen IPv4
         genIPv4 = arbitrary
@@ -71,9 +77,11 @@ spec = do
         it "can read even if unnecessary spaces exist" $ do
             (readMay " ::1" :: Maybe IPv4) `shouldBe` readMay "::1"
         it "does not read overflow mask lengths" $ do
-            (readMay "192.168.0.1/18446744073709551648" :: Maybe (AddrRange IPv4)) `shouldBe` Nothing
+            (readMay "192.168.0.1/18446744073709551648" :: Maybe (AddrRange IPv4))
+                `shouldBe` Nothing
         it "can read embedded v4 in v6 range" $ do
-            (readMay "::ffff:192.0.2.0/120" :: Maybe (AddrRange IPv6)) `shouldSatisfy` isJust
+            (readMay "::ffff:192.0.2.0/120" :: Maybe (AddrRange IPv6))
+                `shouldSatisfy` isJust
 
 to_str_ipv4 :: AddrRange IPv4 -> Bool
 to_str_ipv4 a = readMay (show a) == Just a

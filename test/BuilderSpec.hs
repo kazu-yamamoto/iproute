@@ -33,7 +33,6 @@ instance Arbitrary IPv4 where
 -- stand a non-trivial chance of testing the gap computation corner cases.
 -- We also give 0xffff enhanced odds, by choosing that instead of 0 one
 -- time out of 16.
---
 instance Arbitrary IPv6 where
     arbitrary = arbitraryAdr toIPv6 b16 b17 8
 
@@ -42,14 +41,14 @@ arbitraryAdr func width range adrlen =
     func <$> replicateM adrlen biased
   where
     biased = do
-        n <- choose(0, range)
+        n <- choose (0, range)
         if n <= width
-        then return n
-        else do
-             f <- choose (0, 15 :: Int)
-             if f < 15
-             then return 0
-             else return width
+            then return n
+            else do
+                f <- choose (0, 15 :: Int)
+                if f < 15
+                    then return 0
+                    else return width
 
 ----------------------------------------------------------------
 --
