@@ -18,6 +18,7 @@ import Data.IP.Op
 import Data.IP.Range
 import Data.IntMap (IntMap, (!))
 import qualified Data.IntMap as IM (fromList)
+import Data.List (foldl')
 import Data.Monoid hiding ((<>))
 import Data.Semigroup
 import Data.Traversable
