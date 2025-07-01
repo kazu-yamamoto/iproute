@@ -254,20 +254,20 @@ bestgap :: Word32 -> Word32 -> Word32 -> Word32 -> (Int, Int)
 bestgap !(W32# a0) !(W32# a1) !(W32# a2) !(W32# a3) =
     finalGap
         ( updateGap
-            (0xffff## `and#` (word32ToWordCompat# a3))
+            (0xffff## `and#` word32ToWordCompat# a3)
             ( updateGap
-                (0xffff0000## `and#` (word32ToWordCompat# a3))
+                (0xffff0000## `and#` word32ToWordCompat# a3)
                 ( updateGap
-                    (0xffff## `and#` (word32ToWordCompat# a2))
+                    (0xffff## `and#` word32ToWordCompat# a2)
                     ( updateGap
-                        (0xffff0000## `and#` (word32ToWordCompat# a2))
+                        (0xffff0000## `and#` word32ToWordCompat# a2)
                         ( updateGap
-                            (0xffff## `and#` (word32ToWordCompat# a1))
+                            (0xffff## `and#` word32ToWordCompat# a1)
                             ( updateGap
-                                (0xffff0000## `and#` (word32ToWordCompat# a1))
+                                (0xffff0000## `and#` word32ToWordCompat# a1)
                                 ( updateGap
-                                    (0xffff## `and#` (word32ToWordCompat# a0))
-                                    (initGap (0xffff0000## `and#` (word32ToWordCompat# a0)))
+                                    (0xffff## `and#` word32ToWordCompat# a0)
+                                    (initGap (0xffff0000## `and#` word32ToWordCompat# a0))
                                 )
                             )
                         )

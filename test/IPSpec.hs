@@ -8,7 +8,7 @@ module IPSpec where
 import Control.Applicative
 #endif
 import Data.IP
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, isNothing)
 import Safe (readMay)
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
@@ -21,7 +21,7 @@ import RouteTableSpec ()
 -- Arbitrary
 --
 
-data InvalidIPv4Str = Iv4 String deriving (Show)
+newtype InvalidIPv4Str = Iv4 String deriving (Show)
 
 instance Arbitrary InvalidIPv4Str where
     arbitrary =
@@ -47,7 +47,7 @@ arbitraryIIPv4Str adrGen msklen = toIv4 <$> adrGen <*> lenGen
     toIv4 adr len = Iv4 $ show adr ++ "/" ++ show len
     lenGen = oneof [choose (minBound, -1), choose (msklen + 1, maxBound)]
 
-data InvalidIPv6Str = Iv6 String deriving (Show)
+newtype InvalidIPv6Str = Iv6 String deriving (Show)
 
 instance Arbitrary InvalidIPv6Str where
     arbitrary = arbitraryIIPv6Str arbitrary 128
@@ -90,7 +90,7 @@ to_str_ipv6 :: AddrRange IPv6 -> Bool
 to_str_ipv6 a = readMay (show a) == Just a
 
 ipv4_fail :: InvalidIPv4Str -> Bool
-ipv4_fail (Iv4 a) = (readMay a :: Maybe (AddrRange IPv4)) == Nothing
+ipv4_fail (Iv4 a) = isNothing (readMay a :: Maybe (AddrRange IPv4))
 
 ipv6_fail :: InvalidIPv6Str -> Bool
-ipv6_fail (Iv6 a) = (readMay a :: Maybe (AddrRange IPv6)) == Nothing
+ipv6_fail (Iv6 a) = isNothing (readMay a :: Maybe (AddrRange IPv6))
