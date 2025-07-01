@@ -13,7 +13,6 @@ import Control.Applicative hiding (empty)
 import qualified Control.Applicative as A (empty)
 import Control.Monad
 import Data.Bits
-import Data.Foldable (Foldable (..))
 import Data.IP.Addr
 import Data.IP.Op
 import Data.IP.Range

@@ -14,7 +14,6 @@ import Data.IP
 import Data.IP.RouteTable.Internal
 import Data.List (nub, sort)
 import qualified Data.List as List
-import Data.Monoid ((<>))
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck
