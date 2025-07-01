@@ -2,7 +2,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MagicHash #-}
-{-# LANGUAGE StrictData #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE NoStrict #-}
 
@@ -34,13 +33,13 @@ ipBuilder (IPv6 addr) = ipv6Builder addr
 
 -- | 'P.BoundedPrim' bytestring 'B.Builder' for 'IPv4' addresses.
 ipv4Builder :: IPv4 -> B.Builder
-ipv4Builder addr = P.primBounded ipv4Bounded $! fromIPv4w addr
+ipv4Builder addr = P.primBounded ipv4Bounded $ fromIPv4w addr
 
 {-# INLINE ipv6Builder #-}
 
 -- | 'P.BoundedPrim' bytestring 'B.Builder' for 'IPv6' addresses.
 ipv6Builder :: IPv6 -> B.Builder
-ipv6Builder addr = P.primBounded ipv6Bounded $! fromIPv6w addr
+ipv6Builder addr = P.primBounded ipv6Bounded $ fromIPv6w addr
 
 ------------ Builder utilities
 
@@ -198,8 +197,8 @@ ipv6Bounded =
 
     -- \| Helpers
     hi16, lo16 :: Word32 -> Word16
-    hi16 !(W32# w) = W16# (wordToWord16Compat# (word32ToWordCompat# w `uncheckedShiftRL#` 16#))
-    lo16 !(W32# w) = W16# (wordToWord16Compat# (word32ToWordCompat# w `and#` 0xffff##))
+    hi16 (W32# w) = W16# (wordToWord16Compat# (word32ToWordCompat# w `uncheckedShiftRL#` 16#))
+    lo16 (W32# w) = W16# (wordToWord16Compat# (word32ToWordCompat# w `and#` 0xffff##))
     --
     fstUnit :: a -> ((), a)
     fstUnit = ((),)
@@ -211,14 +210,14 @@ ipv6Bounded =
 
     -- Construct fields decorated with output format details
     genFields (w0, w1, w2, w3) =
-        let !(!gapStart, !gapEnd) = bestgap w0 w1 w2 w3
-            !f0 = makeF0 gapStart gapEnd w0
-            !f1 = makeF12 gapStart gapEnd 2# 3# w1
-            !f2 = makeF12 gapStart gapEnd 4# 5# w2
-            !f3 = makeF3 gapStart gapEnd w3
+        let (gapStart, gapEnd) = bestgap w0 w1 w2 w3
+            f0 = makeF0 gapStart gapEnd w0
+            f1 = makeF12 gapStart gapEnd 2# 3# w1
+            f2 = makeF12 gapStart gapEnd 4# 5# w2
+            f3 = makeF3 gapStart gapEnd w3
          in ((f0, f1), (f2, f3))
 
-    makeF0 (I# gapStart) (I# gapEnd) !w =
+    makeF0 (I# gapStart) (I# gapEnd) w =
         case (gapEnd ==# 0#) `orI#` (gapStart ># 1#) of
             1# -> HL w
             _ -> case gapStart ==# 0# of
@@ -226,7 +225,7 @@ ipv6Bounded =
                 _ -> HC w
     {-# INLINE makeF0 #-}
 
-    makeF12 (I# gapStart) (I# gapEnd) il ir !w =
+    makeF12 (I# gapStart) (I# gapEnd) il ir w =
         case (gapEnd <=# il) `orI#` (gapStart ># ir) of
             1# -> CHL w
             _ -> case gapStart >=# il of
@@ -238,7 +237,7 @@ ipv6Bounded =
                     _ -> CLO w
     {-# INLINE makeF12 #-}
 
-    makeF3 (I# gapStart) (I# gapEnd) !w =
+    makeF3 (I# gapStart) (I# gapEnd) w =
         case gapEnd <=# 6# of
             1# -> CHL w
             _ -> case gapStart ==# 6# of
@@ -251,7 +250,7 @@ ipv6Bounded =
 -- | Unrolled and inlined calculation of the first longest
 -- run (gap) of 16-bit aligned zeros in the input address.
 bestgap :: Word32 -> Word32 -> Word32 -> Word32 -> (Int, Int)
-bestgap !(W32# a0) !(W32# a1) !(W32# a2) !(W32# a3) =
+bestgap (W32# a0) (W32# a1) (W32# a2) (W32# a3) =
     finalGap
         ( updateGap
             (0xffff## `and#` word32ToWordCompat# a3)
