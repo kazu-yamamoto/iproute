@@ -25,7 +25,7 @@ shift128 x i
 
 shiftL128 :: (Word64, Word64) -> Int -> (Word64, Word64)
 shiftL128 (h, l) i =
-    ((h `shiftL` i) .|. (l `shift` (i - 64)), (l `shiftL` i))
+    ((h `shiftL` i) .|. (l `shift` (i - 64)), l `shiftL` i)
 
 shiftR128 :: (Word64, Word64) -> Int -> (Word64, Word64)
 shiftR128 (h, l) i =

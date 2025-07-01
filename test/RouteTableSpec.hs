@@ -100,25 +100,25 @@ ordered (Node k _ _ l r) = ordered' k l && ordered' k r
 -- Foldl and foldr properties are adapted from Data.Map tests
 prop_foldl :: Int -> [(AddrRange IPv4, Int)] -> Property
 prop_foldl n ys =
-    length ys > 0 ==>
+    not (null ys) ==>
         let xs = List.nubBy ((==) `on` fst) ys
             m = fromList xs
-         in Foldable.foldl (+) n m == List.foldr (+) n (List.map snd xs)
+         in Foldable.foldl (+) n m == List.foldr ((+) . snd) n xs
                 && Foldable.foldl (flip (:)) [] m == reverse (List.map snd (List.sort xs))
-                && foldlWithKey (\b _ a -> a + b) n m == List.foldr (+) n (List.map snd xs)
+                && foldlWithKey (\b _ a -> a + b) n m == List.foldr ((+) . snd) n xs
 
 prop_foldr :: Int -> [(AddrRange IPv4, Int)] -> Property
 prop_foldr n ys =
-    length ys > 0 ==>
+    not (null ys) ==>
         let xs = List.nubBy ((==) `on` fst) ys
             m = fromList xs
-         in Foldable.foldr (+) n m == List.foldr (+) n (List.map snd xs)
+         in Foldable.foldr (+) n m == List.foldr ((+) . snd) n xs
                 && Foldable.foldr (:) [] m == List.map snd (List.sortBy (compare `on` fst) xs)
-                && foldrWithKey (\_ a b -> a + b) n m == List.foldr (+) n (List.map snd xs)
+                && foldrWithKey (\_ a b -> a + b) n m == List.foldr ((+) . snd) n xs
 
 prop_monoid :: [(AddrRange IPv4, ())] -> [(AddrRange IPv4, ())] -> Property
 prop_monoid xs ys =
-    length xs > 0 && length ys > 0 ==>
+    not (null xs) && not (null ys) ==>
         let xm = fromList xs
             ym = fromList ys
          in empty <> xm == xm

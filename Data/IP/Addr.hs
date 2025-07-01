@@ -172,19 +172,19 @@ instance Enum IP where
     pred (IPv4 ip) = IPv4 $ pred ip
     pred (IPv6 ip) = IPv6 $ pred ip
 
-    enumFrom (IPv4 ip) = fmap IPv4 $ enumFrom ip
-    enumFrom (IPv6 ip) = fmap IPv6 $ enumFrom ip
+    enumFrom (IPv4 ip) = IPv4 <$> enumFrom ip
+    enumFrom (IPv6 ip) = IPv6 <$> enumFrom ip
 
-    enumFromTo (IPv4 ip) (IPv4 ip') = fmap IPv4 $ enumFromTo ip ip'
-    enumFromTo (IPv6 ip) (IPv6 ip') = fmap IPv6 $ enumFromTo ip ip'
+    enumFromTo (IPv4 ip) (IPv4 ip') = IPv4 <$> enumFromTo ip ip'
+    enumFromTo (IPv6 ip) (IPv6 ip') = IPv6 <$> enumFromTo ip ip'
     enumFromTo _ _ = error "enumFromTo: Incompatible IP families"
 
-    enumFromThen (IPv4 ip) (IPv4 ip') = fmap IPv4 $ enumFromThen ip ip'
-    enumFromThen (IPv6 ip) (IPv6 ip') = fmap IPv6 $ enumFromThen ip ip'
+    enumFromThen (IPv4 ip) (IPv4 ip') = IPv4 <$> enumFromThen ip ip'
+    enumFromThen (IPv6 ip) (IPv6 ip') = IPv6 <$> enumFromThen ip ip'
     enumFromThen _ _ = error "enumFromThen: Incompatible IP families"
 
-    enumFromThenTo (IPv4 ip) (IPv4 inc) (IPv4 fin) = fmap IPv4 $ enumFromThenTo ip inc fin
-    enumFromThenTo (IPv6 ip) (IPv6 inc) (IPv6 fin) = fmap IPv6 $ enumFromThenTo ip inc fin
+    enumFromThenTo (IPv4 ip) (IPv4 inc) (IPv4 fin) = IPv4 <$> enumFromThenTo ip inc fin
+    enumFromThenTo (IPv6 ip) (IPv6 inc) (IPv6 fin) = IPv6 <$> enumFromThenTo ip inc fin
     enumFromThenTo _ _ _ = error "enumFromThenTo: Incompatible IP families"
 
 ip6ToInteger :: IPv6 -> Integer
@@ -391,7 +391,7 @@ toIPv6w w@(!_, !_, !_, !_) = IP6 w
 -- >>> fromIPv4 (toIPv4 [192,0,2,1])
 -- [192,0,2,1]
 fromIPv4 :: IPv4 -> [Int]
-fromIPv4 (IP4 w) = split w 0o30 : split w 0o20 : split w 0o10 : split w 0 : []
+fromIPv4 (IP4 w) = [split w 0o30, split w 0o20, split w 0o10, split w 0]
   where
     split :: Word32 -> Int -> Int
     split a n = fromIntegral $ a `unsafeShiftR` n .&. 0xff

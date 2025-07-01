@@ -1,4 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MagicHash #-}
@@ -128,7 +127,7 @@ ipv6Bounded =
     --
     output128 :: P.BoundedPrim ((FF, FF), (FF, FF))
     output128 = output64 >*< output64
-    output64 = (output32 >*< output32)
+    output64 = output32 >*< output32
     --
     -- And finally the per-word case-work.
     --
@@ -140,7 +139,9 @@ ipv6Bounded =
                     P.condB (\case COL -> True; _ -> False) build_COL $ -- :
                         P.condB (\case CC -> True; _ -> False) build_CC $ -- :  :
                             P.condB (\case CLO _ -> True; _ -> False) build_CLO $ --    :lo
-                                P.condB (\case CHC _ -> True; _ -> False) build_CHC $ -- :hi:
+                                P.condB
+                                    (\case CHC _ -> True; _ -> False)
+                                    build_CHC -- :hi:
                                     build_HC --  hi:
 
     -- encoders for the eight field format (FF) cases.
