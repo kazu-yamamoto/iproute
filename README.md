@@ -8,7 +8,4 @@ The IP routing table is a finite map (or an associative array) based
 on the longest match.
 
 The algorithm of the IP routing table is described in
-"Radish -- A Simple Routing Table Structure for CIDR"
-and its PDF is found on the following page:
-
-	http://www.mew.org/~kazu/proj/iproute/en/
+"[Radish -- A Simple Routing Table Structure for CIDR](https://mew.org/~kazu/doc/paper/radish.pdf)".
