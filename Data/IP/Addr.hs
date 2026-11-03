@@ -110,6 +110,13 @@ newtype IPv6 = IP6 IPv6Addr
 --
 
 -- | Delegates to 'Word32', which stops at 'minBound' and 'maxBound'.
+--
+-- >>> [read "255.255.255.254" ..] :: [IPv4]
+-- [255.255.255.254,255.255.255.255]
+-- >>> [read "0.0.0.1", read "0.0.0.0" ..] :: [IPv4]
+-- [0.0.0.1,0.0.0.0]
+-- >>> [read "192.0.2.2" .. read "192.0.2.1"] :: [IPv4]
+-- []
 instance Enum IPv4 where
     fromEnum (IP4 a) = fromEnum a
     toEnum = IP4 . toEnum
@@ -120,7 +127,17 @@ instance Enum IPv4 where
     enumFromThen (IP4 a) (IP4 b) = IP4 <$> enumFromThen a b
     enumFromThenTo (IP4 a) (IP4 b) (IP4 c) = IP4 <$> enumFromThenTo a b c
 
--- | 'fromEnum' and 'toEnum' fail if the address does not fit in 'Int'.
+-- | Stops at 'minBound' and 'maxBound'.
+--   'fromEnum' and 'toEnum' fail if the address does not fit in 'Int'.
+--
+-- >>> [read "ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe" ..] :: [IPv6]
+-- [ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe,ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff]
+-- >>> [read "::2", read "::1" ..] :: [IPv6]
+-- [::2,::1,::]
+-- >>> [read "::2" .. read "::1"] :: [IPv6]
+-- []
+-- >>> fromEnum (read "::1:0" :: IPv6)
+-- 65536
 instance Enum IPv6 where
     fromEnum ip
         | i > toInteger (maxBound :: Int) = fromEnumError "IPv6" ip
@@ -161,6 +178,10 @@ instance Enum IPv6 where
     enumFromThenTo ip inc fin =
         integerToIP6 <$> [ip6ToInteger ip, ip6ToInteger inc .. ip6ToInteger fin]
 
+-- | Mixed families are enumerated as IPv6, as in 'Eq' and 'Ord'.
+--
+-- >>> [IPv4 (read "192.0.2.1") .. IPv6 (read "::ffff:192.0.2.2")]
+-- [::ffff:192.0.2.1,::ffff:192.0.2.2]
 instance Enum IP where
     fromEnum (IPv4 ip) = fromEnum ip
     fromEnum (IPv6 ip) = fromEnum ip
@@ -177,7 +198,6 @@ instance Enum IP where
     enumFrom (IPv4 ip) = IPv4 <$> enumFrom ip
     enumFrom (IPv6 ip) = IPv6 <$> enumFrom ip
 
-    -- Mixed families are enumerated as IPv6, as in Eq and Ord.
     enumFromTo (IPv4 ip) (IPv4 ip') = IPv4 <$> enumFromTo ip ip'
     enumFromTo ip ip' = IPv6 <$> enumFromTo (toV6 ip) (toV6 ip')
 
@@ -468,12 +488,29 @@ fromIPv6w (IP6 ip6rep) = ip6rep
 -- Read
 --
 
+-- |
+-- >>> read "[192.0.2.1,2001:db8::1]" :: [IP]
+-- [192.0.2.1,2001:db8::1]
 instance Read IP where
     readsPrec _ = parseIP
 
+-- | 'reads' returns the rest of the input.
+--
+-- >>> reads "192.0.2.1 rest" :: [(IPv4, String)]
+-- [(192.0.2.1," rest")]
+-- >>> read "(192.0.2.1,80)" :: (IPv4, Int)
+-- (192.0.2.1,80)
+-- >>> reads "192.0.2.1a" :: [(IPv4, String)]
+-- []
 instance Read IPv4 where
     readsPrec _ = parseIPv4
 
+-- | 'reads' returns the rest of the input.
+--
+-- >>> reads "::192.0.2.1 rest" :: [(IPv6, String)]
+-- [(::192.0.2.1," rest")]
+-- >>> read "[::1,2001:db8::1]" :: [IPv6]
+-- [::1,2001:db8::1]
 instance Read IPv6 where
     readsPrec _ = parseIPv6
 

@@ -95,6 +95,9 @@ instance Show IPRange where
 -- Read
 --
 
+-- |
+-- >>> read "[192.0.2.0/24,2001:db8::/32]" :: [IPRange]
+-- [192.0.2.0/24,2001:db8::/32]
 instance Read IPRange where
     readsPrec _ = parseIPRange
 
@@ -105,6 +108,10 @@ parseIPRange cs = case runParser ip4range cs of
         (Just ip, rest) -> [(IPv6Range ip, rest)]
         (Nothing, _) -> []
 
+-- | 'reads' returns the rest of the input.
+--
+-- >>> reads "192.0.2.0/24 rest" :: [(AddrRange IPv4, String)]
+-- [(192.0.2.0/24," rest")]
 instance Read (AddrRange IPv4) where
     readsPrec _ = parseIPv4Range
 

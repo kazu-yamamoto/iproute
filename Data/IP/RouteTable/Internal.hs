@@ -314,6 +314,10 @@ fromList = L.foldl' (\s (k, v) -> insert k v s) empty
 -- |
 --   The 'toList' function creates a list of a pair of 'AddrRange' and
 --   value from an IP routing table. The list is sorted by 'AddrRange'.
+--
+-- >>> let rt = fromList [("10.128.0.0/16",3),("10.0.0.0/8",1),("10.1.0.0/16",2)] :: IPRTable IPv4 Int
+-- >>> toList rt
+-- [(10.0.0.0/8,1),(10.1.0.0/16,2),(10.128.0.0/16,3)]
 toList :: Routable k => IPRTable k a -> [(AddrRange k, a)]
 toList = foldrWithKey (\k a xs -> (k, a) : xs) []
 
@@ -328,6 +332,10 @@ foldt func v rt@(Node _ _ _ l r) = foldt func (foldt func (func rt v) l) r
 --   This function is equivalent to Data.Map.foldlWithKey with necessary to
 --   IPRTable changes.
 --   Since: 1.7.5
+--
+-- >>> let rt = fromList [("10.128.0.0/16",3),("10.0.0.0/8",1),("10.1.0.0/16",2)] :: IPRTable IPv4 Int
+-- >>> foldlWithKey (\ks k _ -> k : ks) [] rt
+-- [10.128.0.0/16,10.1.0.0/16,10.0.0.0/8]
 foldlWithKey :: (b -> AddrRange k -> a -> b) -> b -> IPRTable k a -> b
 foldlWithKey f zr = go zr
   where
@@ -341,6 +349,10 @@ foldlWithKey f zr = go zr
 --   This function is equivalent to Data.Map.foldrWithKey with necessary to
 --   IPRTable changes.
 --   Since: 1.7.5
+--
+-- >>> let rt = fromList [("10.128.0.0/16",3),("10.0.0.0/8",1),("10.1.0.0/16",2)] :: IPRTable IPv4 Int
+-- >>> foldrWithKey (\k _ ks -> k : ks) [] rt
+-- [10.0.0.0/8,10.1.0.0/16,10.128.0.0/16]
 foldrWithKey :: (AddrRange k -> a -> b -> b) -> b -> IPRTable k a -> b
 foldrWithKey f zr = go zr
   where
