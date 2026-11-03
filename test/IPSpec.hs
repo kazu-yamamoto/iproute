@@ -1,8 +1,10 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module IPSpec where
 
+import Control.Exception (evaluate)
 import Data.IP
 import Data.Maybe (isJust, isNothing)
 import Safe (readMay)
@@ -97,6 +99,29 @@ spec = do
         it "does not stop in the middle of an address" $ do
             (reads "192.0.2.1a" :: [(IPv4, String)]) `shouldBe` []
             (reads "1:2:3:4:5:6:7:8:9" :: [(IPv6, String)]) `shouldBe` []
+
+    describe "enum" $ do
+        it "stops at maxBound" $ do
+            [maxBound ..] `shouldBe` [maxBound :: IPv4]
+            [maxBound ..] `shouldBe` [maxBound :: IPv6]
+            [pred maxBound, maxBound ..] `shouldBe` [pred maxBound, maxBound :: IPv4]
+            [pred maxBound, maxBound ..] `shouldBe` [pred maxBound, maxBound :: IPv6]
+        it "stops at minBound" $ do
+            [succ minBound, minBound ..] `shouldBe` [succ minBound, minBound :: IPv4]
+            [succ minBound, minBound ..] `shouldBe` [succ minBound, minBound :: IPv6]
+        it "returns [] for an empty range" $ do
+            ["::2" .. "::1"] `shouldBe` ([] :: [IPv6])
+            ["0.0.0.2" .. "0.0.0.1"] `shouldBe` ([] :: [IPv4])
+        it "converts IPv6 to Int and back" $ do
+            fromEnum ("::1:0" :: IPv6) `shouldBe` 0x10000
+            toEnum 0x10000 `shouldBe` ("::1:0" :: IPv6)
+        it "rejects IPv6 which does not fit in Int" $ do
+            evaluate (fromEnum ("1::" :: IPv6)) `shouldThrow` anyErrorCall
+            evaluate (toEnum (-1) :: IPv6) `shouldThrow` anyErrorCall
+        prop "IPv6 enumFromTo is consistent with Integer" $ \x (Small n) ->
+            let y = toEnum (fromEnum (x :: IPv4) `mod` 0x10000) :: IPv6
+                z = toEnum (fromEnum y + (abs n :: Int)) :: IPv6
+             in map fromEnum [y .. z] == [fromEnum y .. fromEnum z]
 
 to_str_ipv4 :: AddrRange IPv4 -> Bool
 to_str_ipv4 a = readMay (show a) == Just a

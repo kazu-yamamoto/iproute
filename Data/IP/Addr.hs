@@ -12,7 +12,7 @@ import qualified Data.List as L
 import Data.String
 import Data.Word
 import GHC.ByteOrder (ByteOrder (..), targetByteOrder)
-import GHC.Enum (predError, succError)
+import GHC.Enum (fromEnumError, predError, succError, toEnumError)
 import GHC.Generics
 import Network.Socket
 import Numeric (showHex, showInt)
@@ -109,25 +109,27 @@ newtype IPv6 = IP6 IPv6Addr
 -- Enum
 --
 
+-- | Delegates to 'Word32', which stops at 'minBound' and 'maxBound'.
 instance Enum IPv4 where
     fromEnum (IP4 a) = fromEnum a
     toEnum = IP4 . toEnum
+    succ (IP4 a) = IP4 (succ a)
+    pred (IP4 a) = IP4 (pred a)
+    enumFrom (IP4 a) = IP4 <$> enumFrom a
+    enumFromTo (IP4 a) (IP4 b) = IP4 <$> enumFromTo a b
+    enumFromThen (IP4 a) (IP4 b) = IP4 <$> enumFromThen a b
+    enumFromThenTo (IP4 a) (IP4 b) (IP4 c) = IP4 <$> enumFromThenTo a b c
 
+-- | 'fromEnum' and 'toEnum' fail if the address does not fit in 'Int'.
 instance Enum IPv6 where
-    -- fromEnum and toEnum are not really useful, but I defined them anyway
-    fromEnum (IP6 (a, b, c, d)) =
-        let a' = fromEnum a `shift` 96
-            b' = fromEnum b `shift` 64
-            c' = fromEnum c `shift` 32
-            d' = fromEnum d
-         in a' .|. b' .|. c' .|. d'
-    toEnum i =
-        let i' = fromIntegral i :: Integer
-            a = fromIntegral (i' `shiftR` 96 .&. 0xffffffff)
-            b = fromIntegral (i' `shiftR` 64 .&. 0xffffffff)
-            c = fromIntegral (i' `shiftR` 32 .&. 0xffffffff)
-            d = fromIntegral (i' .&. 0xffffffff)
-         in IP6 (a, b, c, d)
+    fromEnum ip
+        | i > toInteger (maxBound :: Int) = fromEnumError "IPv6" ip
+        | otherwise = fromInteger i
+      where
+        i = ip6ToInteger ip
+    toEnum i
+        | i < 0 = toEnumError "IPv6" i (minBound :: IPv6, maxBound :: IPv6)
+        | otherwise = integerToIP6 (toInteger i)
 
     succ (IP6 (0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff)) = succError "IPv6"
     succ (IP6 (a, 0xffffffff, 0xffffffff, 0xffffffff)) = IP6 (succ a, 0, 0, 0)
@@ -141,23 +143,23 @@ instance Enum IPv6 where
     pred (IP6 (a, b, c, 0)) = IP6 (a, b, pred c, 0xffffffff)
     pred (IP6 (a, b, c, d)) = IP6 (a, b, c, pred d)
 
-    enumFrom ip = ip : gen ip
-      where
-        gen i = let i' = succ i in i' : gen i'
+    enumFrom ip = enumFromTo ip maxBound
 
-    enumFromTo ip ip' = ip : gen ip
+    enumFromTo ip ip'
+        | ip > ip' = []
+        | otherwise = ip : gen ip
       where
         gen i
             | i == ip' = []
             | otherwise = let i' = succ i in i' : gen i'
 
-    -- These two are implemented via the integer enum instance.
-    -- A more correct implementation would essentially require
-    -- implementing instance Num IPv6, which isn't something
-    -- I wanna do. Another approach is to use Word128 to store
-    -- an IPv6 address.
-    enumFromThen ip ip' = fmap integerToIP6 [ip6ToInteger ip, ip6ToInteger ip' ..]
-    enumFromThenTo ip inc fin = fmap integerToIP6 [ip6ToInteger ip, ip6ToInteger inc .. ip6ToInteger fin]
+    enumFromThen ip ip'
+        | ip' >= ip = enumFromThenTo ip ip' maxBound
+        | otherwise = enumFromThenTo ip ip' minBound
+
+    -- Integer's enumFromThenTo never goes beyond the bounds given.
+    enumFromThenTo ip inc fin =
+        integerToIP6 <$> [ip6ToInteger ip, ip6ToInteger inc .. ip6ToInteger fin]
 
 instance Enum IP where
     fromEnum (IPv4 ip) = fromEnum ip
