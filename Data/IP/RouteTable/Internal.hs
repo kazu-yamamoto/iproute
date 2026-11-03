@@ -13,15 +13,13 @@ import qualified Control.Applicative as A (empty)
 import Control.Monad
 import Data.Bits
 import Data.IP.Addr
+import Data.IP.Mask
 import Data.IP.Op
 import Data.IP.Range
-import Data.IntMap (IntMap, (!))
-import qualified Data.IntMap as IM (fromList)
 import qualified Data.List as L
 import Data.Monoid hiding ((<>))
 import Data.Semigroup
 import Data.Traversable
-import Data.Word
 import GHC.Generics (Generic, Generic1)
 import Prelude hiding (lookup)
 
@@ -58,28 +56,10 @@ instance Routable IPv6 where
 --
 
 intToTBitIPv4 :: Int -> IPv4
-intToTBitIPv4 len = IP4 (intToTBitsIPv4 ! len)
+intToTBitIPv4 len = IP4 (0x80000000 `shiftR` len)
 
 intToTBitIPv6 :: Int -> IPv6
-intToTBitIPv6 len = IP6 (intToTBitsIPv6 ! len)
-
-intToTBitsWord32 :: [Word32]
-intToTBitsWord32 = iterate (`shift` (-1)) 0x80000000
-
-intToTBitsIPv4 :: IntMap IPv4Addr
-intToTBitsIPv4 = IM.fromList $ zip [0 .. 32] intToTBitsWord32
-
-intToTBitsIPv6 :: IntMap IPv6Addr
-intToTBitsIPv6 = IM.fromList $ zip [0 .. 128] bs
-  where
-    bs = b1 ++ b2 ++ b3 ++ b4 ++ b5
-    b1 = map (\vbit -> (vbit, all0, all0, all0)) intToTBits
-    b2 = map (\vbit -> (all0, vbit, all0, all0)) intToTBits
-    b3 = map (\vbit -> (all0, all0, vbit, all0)) intToTBits
-    b4 = map (\vbit -> (all0, all0, all0, vbit)) intToTBits
-    b5 = [(all0, all0, all0, all0)]
-    intToTBits = take 32 intToTBitsWord32
-    all0 = 0x00000000
+intToTBitIPv6 len = IP6 $ toIP6Addr $ (0x8000000000000000, 0) `shiftR128` len
 
 ----------------------------------------------------------------
 

@@ -46,7 +46,6 @@ library
         base >=4.16 && <5,
         appar,
         bytestring,
-        containers,
         network
 
 test-suite spec
@@ -67,7 +66,6 @@ test-suite spec
         QuickCheck,
         appar,
         bytestring,
-        containers,
         network,
         safe,
         iproute
