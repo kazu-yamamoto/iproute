@@ -100,6 +100,16 @@ spec = do
             (reads "192.0.2.1a" :: [(IPv4, String)]) `shouldBe` []
             (reads "1:2:3:4:5:6:7:8:9" :: [(IPv6, String)]) `shouldBe` []
 
+    describe "makeAddrRange" $ do
+        it "clamps the mask length" $ do
+            makeAddrRange ("192.0.2.1" :: IPv4) 40 `shouldBe` "192.0.2.1/32"
+            makeAddrRange ("192.0.2.1" :: IPv4) (-1) `shouldBe` "0.0.0.0/0"
+            makeAddrRange ("2001:db8::1" :: IPv6) 200 `shouldBe` "2001:db8::1/128"
+            makeAddrRange ("2001:db8::1" :: IPv6) (-1) `shouldBe` "::/0"
+        prop "makes a valid IPv4 range" $ \a n ->
+            let r = makeAddrRange (a :: IPv4) n in readMay (show r) == Just r
+        prop "makes a valid IPv6 range" $ \a n ->
+            let r = makeAddrRange (a :: IPv6) n in readMay (show r) == Just r
     describe "enum" $ do
         it "stops at maxBound" $ do
             [maxBound ..] `shouldBe` [maxBound :: IPv4]

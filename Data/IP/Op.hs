@@ -35,13 +35,18 @@ class Eq a => Addr a where
     --       ::ffff
     intToMask :: Int -> a
 
+    -- | The number of bits of the address. The argument is not evaluated.
+    addrBits :: a -> Int
+
 instance Addr IPv4 where
     masked = maskedIPv4
     intToMask = maskIPv4
+    addrBits _ = 32
 
 instance Addr IPv6 where
     masked = maskedIPv6
     intToMask = maskIPv6
+    addrBits _ = 128
 
 ----------------------------------------------------------------
 
@@ -80,14 +85,20 @@ isMatchedTo a r = a `masked` mask r == addr r
 --   The 'makeAddrRange' functions takes an 'Addr' address and a mask
 --   length. It creates a bit mask from the mask length and masks
 --   the 'Addr' address, then returns 'AddrRange' made of them.
+--   A mask length out of range is clamped to it.
 --
 -- >>> makeAddrRange (toIPv4 [127,0,2,1]) 8
 -- 127.0.0.0/8
 -- >>> makeAddrRange (toIPv6 [0x2001,0xDB8,0,0,0,0,0,1]) 8
 -- 2000::/8
+-- >>> makeAddrRange (toIPv4 [127,0,2,1]) 40
+-- 127.0.2.1/32
+-- >>> makeAddrRange (toIPv4 [127,0,2,1]) (-1)
+-- 0.0.0.0/0
 makeAddrRange :: Addr a => a -> Int -> AddrRange a
-makeAddrRange ad len = AddrRange adr msk len
+makeAddrRange ad len0 = AddrRange adr msk len
   where
+    len = max 0 $ min (addrBits ad) len0
     msk = intToMask len
     adr = ad `masked` msk
 

@@ -34,7 +34,7 @@ module Data.IP (
     AddrRange (addr, mask, mlen),
 
     -- * Address class
-    Addr (..),
+    Addr (masked, intToMask),
     makeAddrRange,
     (>:>),
     isMatchedTo,
