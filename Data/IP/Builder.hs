@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MagicHash #-}
 {-# LANGUAGE TupleSections #-}
@@ -57,11 +56,11 @@ ipv4Bounded =
     {-# INLINE quads #-}
     qdot s (W32# a) =
         ( W8#
-            (wordToWord8Compat# ((word32ToWordCompat# a `uncheckedShiftRL#` s) `and#` 0xff##))
+            (wordToWord8# ((word32ToWord# a `uncheckedShiftRL#` s) `and#` 0xff##))
         , ()
         )
     {-# INLINE qdot #-}
-    qfin (W32# a) = W8# (wordToWord8Compat# (word32ToWordCompat# a `and#` 0xff##))
+    qfin (W32# a) = W8# (wordToWord8# (word32ToWord# a `and#` 0xff##))
     {-# INLINE qfin #-}
     dotsep = const 0x2e >$< toB P.word8
 
@@ -198,8 +197,8 @@ ipv6Bounded =
 
     -- \| Helpers
     hi16, lo16 :: Word32 -> Word16
-    hi16 (W32# w) = W16# (wordToWord16Compat# (word32ToWordCompat# w `uncheckedShiftRL#` 16#))
-    lo16 (W32# w) = W16# (wordToWord16Compat# (word32ToWordCompat# w `and#` 0xffff##))
+    hi16 (W32# w) = W16# (wordToWord16# (word32ToWord# w `uncheckedShiftRL#` 16#))
+    lo16 (W32# w) = W16# (wordToWord16# (word32ToWord# w `and#` 0xffff##))
     --
     fstUnit :: a -> ((), a)
     fstUnit = ((),)
@@ -254,20 +253,20 @@ bestgap :: Word32 -> Word32 -> Word32 -> Word32 -> (Int, Int)
 bestgap (W32# a0) (W32# a1) (W32# a2) (W32# a3) =
     finalGap
         ( updateGap
-            (0xffff## `and#` word32ToWordCompat# a3)
+            (0xffff## `and#` word32ToWord# a3)
             ( updateGap
-                (0xffff0000## `and#` word32ToWordCompat# a3)
+                (0xffff0000## `and#` word32ToWord# a3)
                 ( updateGap
-                    (0xffff## `and#` word32ToWordCompat# a2)
+                    (0xffff## `and#` word32ToWord# a2)
                     ( updateGap
-                        (0xffff0000## `and#` word32ToWordCompat# a2)
+                        (0xffff0000## `and#` word32ToWord# a2)
                         ( updateGap
-                            (0xffff## `and#` word32ToWordCompat# a1)
+                            (0xffff## `and#` word32ToWord# a1)
                             ( updateGap
-                                (0xffff0000## `and#` word32ToWordCompat# a1)
+                                (0xffff0000## `and#` word32ToWord# a1)
                                 ( updateGap
-                                    (0xffff## `and#` word32ToWordCompat# a0)
-                                    (initGap (0xffff0000## `and#` word32ToWordCompat# a0))
+                                    (0xffff## `and#` word32ToWord# a0)
+                                    (initGap (0xffff0000## `and#` word32ToWord# a0))
                                 )
                             )
                         )
@@ -308,23 +307,3 @@ bestgap (W32# a0) (W32# a1) (W32# a2) (W32# a3) =
                         s = e -# g
                      in (I# s, I# e)
 {-# INLINE bestgap #-}
-
-#if MIN_VERSION_base(4,16,0)
-word32ToWordCompat# :: Word32# -> Word#
-word32ToWordCompat# = word32ToWord#
-
-wordToWord8Compat# :: Word# -> Word8#
-wordToWord8Compat# = wordToWord8#
-
-wordToWord16Compat# :: Word# -> Word16#
-wordToWord16Compat# = wordToWord16#
-#else
-word32ToWordCompat# :: Word# -> Word#
-word32ToWordCompat# x = x
-
-wordToWord8Compat# :: Word# -> Word#
-wordToWord8Compat# x = x
-
-wordToWord16Compat# :: Word# -> Word#
-wordToWord16Compat# x = x
-#endif

@@ -8,14 +8,14 @@ import Control.Monad
 import Data.Bits
 import Data.Char
 import Data.Data (Data)
-import Data.List (foldl', intersperse)
+import qualified Data.List as L
 import Data.String
 import Data.Word
+import GHC.ByteOrder (ByteOrder (..), targetByteOrder)
 import GHC.Enum (predError, succError)
 import GHC.Generics
 import Network.Socket
 import Numeric (showHex, showInt)
-import System.ByteOrder
 import Text.Appar.String
 
 ----------------------------------------------------------------
@@ -222,7 +222,7 @@ instance Show IPv6 where
 
 -- | Show an IPv4 address in the dot-decimal notation.
 showIPv4 :: IPv4 -> ShowS
-showIPv4 = foldr1 (.) . intersperse (showChar '.') . map showInt . fromIPv4
+showIPv4 = foldr1 (.) . L.intersperse (showChar '.') . map showInt . fromIPv4
 
 -- | Show an IPv6 address in the most appropriate notation, based on recommended
 -- representation proposed by <http://tools.ietf.org/html/rfc5952 RFC 5952>.
@@ -245,7 +245,7 @@ showIPv6 ip@(IP6 (a1, a2, a3, a4))
         showFields fields
   where
     fields = fromIPv6 ip
-    showFields = foldr (.) id . intersperse (showChar ':') . map showHex
+    showFields = foldr (.) id . L.intersperse (showChar ':') . map showHex
     prefix = take begin fields -- fields before "::"
     suffix = drop end fields -- fields after "::"
     begin = end + diff -- the longest run of zeros
@@ -554,7 +554,7 @@ hex = do
     ns <- some hexDigit
     check ns
     let ms = map digitToInt ns
-        val = foldl' (\x y -> x * 16 + y) 0 ms
+        val = L.foldl' (\x y -> x * 16 + y) 0 ms
     return val
   where
     check ns = when (length ns > 4) (fail "IPv6 address -- more than 4 hex")
@@ -646,13 +646,13 @@ ip4Embedded' checkTermination =
 -- | The 'fromHostAddress' function converts 'HostAddress' to 'IPv4'.
 fromHostAddress :: HostAddress -> IPv4
 fromHostAddress addr4
-    | byteOrder == LittleEndian = IP4 $ fixByteOrder addr4
+    | targetByteOrder == LittleEndian = IP4 $ byteSwap32 addr4
     | otherwise = IP4 addr4
 
 -- | The 'toHostAddress' function converts 'IPv4' to 'HostAddress'.
 toHostAddress :: IPv4 -> HostAddress
 toHostAddress (IP4 addr4)
-    | byteOrder == LittleEndian = fixByteOrder addr4
+    | targetByteOrder == LittleEndian = byteSwap32 addr4
     | otherwise = addr4
 
 -- | The 'fromHostAddress6' function converts 'HostAddress6' to 'IPv6'.
@@ -663,19 +663,9 @@ fromHostAddress6 = IP6
 toHostAddress6 :: IPv6 -> HostAddress6
 toHostAddress6 (IP6 addr6) = addr6
 
-fixByteOrder :: Word32 -> Word32
-fixByteOrder s = d1 .|. d2 .|. d3 .|. d4
-  where
-    d1 = shiftL s 24
-    d2 = shiftL s 8 .&. 0x00ff0000
-    d3 = shiftR s 8 .&. 0x0000ff00
-    d4 = shiftR s 24 .&. 0x000000ff
-
 -- | Convert IPv4 address to IPv4-embedded-in-IPv6
 ipv4ToIPv6 :: IPv4 -> IPv6
-ipv4ToIPv6 ip = toIPv6b [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, i1, i2, i3, i4]
-  where
-    [i1, i2, i3, i4] = fromIPv4 ip
+ipv4ToIPv6 (IP4 w) = IP6 (0, 0, 0xffff, w)
 
 -- | Convert 'SockAddr' to 'IP'.
 --

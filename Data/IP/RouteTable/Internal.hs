@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveGeneric #-}
 
 -- |
@@ -18,7 +17,7 @@ import Data.IP.Op
 import Data.IP.Range
 import Data.IntMap (IntMap, (!))
 import qualified Data.IntMap as IM (fromList)
-import Data.List (foldl')
+import qualified Data.List as L
 import Data.Monoid hiding ((<>))
 import Data.Semigroup
 import Data.Traversable
@@ -330,7 +329,7 @@ findMatch k1 (Node k2 _ (Just vl) l r)
 --   The 'fromList' function creates a new IP routing table from
 --   a list of a pair of 'IPrange' and value.
 fromList :: Routable k => [(AddrRange k, a)] -> IPRTable k a
-fromList = foldl' (\s (k, v) -> insert k v s) empty
+fromList = L.foldl' (\s (k, v) -> insert k v s) empty
 
 -- |
 --   The 'toList' function creates a list of a pair of 'AddrRange' and

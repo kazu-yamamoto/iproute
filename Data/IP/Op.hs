@@ -1,6 +1,5 @@
 module Data.IP.Op where
 
-import Data.Bits
 import Data.IP.Addr
 import Data.IP.Mask
 import Data.IP.Range
@@ -95,12 +94,9 @@ makeAddrRange ad len = AddrRange adr msk len
 -- | Convert IPv4 range to IPV4-embedded-in-IPV6 range
 ipv4RangeToIPv6 :: AddrRange IPv4 -> AddrRange IPv6
 ipv4RangeToIPv6 range =
-    makeAddrRange
-        (toIPv6 [0, 0, 0, 0, 0, 0xffff, (i1 `shift` 8) .|. i2, (i3 `shift` 8) .|. i4])
-        (masklen + 96)
+    makeAddrRange (ipv4ToIPv6 ip) (masklen + 96)
   where
     (ip, masklen) = addrRangePair range
-    [i1, i2, i3, i4] = fromIPv4 ip
 
 -- |
 --   The 'unmakeAddrRange' functions take a 'AddrRange' and

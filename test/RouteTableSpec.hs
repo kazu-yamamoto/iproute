@@ -1,12 +1,8 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module RouteTableSpec where
 
-#if __GLASGOW_HASKELL__ < 709
-import Control.Applicative hiding (empty)
-#endif
 import Control.Monad
 import qualified Data.Foldable as Foldable
 import Data.Function (on)
