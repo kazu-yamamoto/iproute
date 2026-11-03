@@ -78,6 +78,25 @@ spec = do
         it "can read embedded v4 in v6 range" $ do
             (readMay "::ffff:192.0.2.0/120" :: Maybe (AddrRange IPv6))
                 `shouldSatisfy` isJust
+        prop "lists of IP" $ \xs ys ->
+            let ips = map IPv4 xs ++ map IPv6 ys in readMay (show ips) == Just ips
+        prop "pairs of IPv4 and Int" $ \x n ->
+            readMay (show (x :: IPv4, n :: Int)) == Just (x, n)
+        prop "pairs of IPv6 and Int" $ \x n ->
+            readMay (show (x :: IPv6, n :: Int)) == Just (x, n)
+        prop "lists of IPRange" $ \xs ys ->
+            let rs = map IPv4Range xs ++ map IPv6Range ys
+             in readMay (show rs) == Just rs
+        it "returns the rest of the input" $ do
+            (reads "192.0.2.1 x" :: [(IPv4, String)])
+                `shouldBe` [(read "192.0.2.1", " x")]
+            (reads "::192.0.2.1 x" :: [(IPv6, String)])
+                `shouldBe` [(read "::192.0.2.1", " x")]
+            (reads "192.0.2.0/24 x" :: [(AddrRange IPv4, String)])
+                `shouldBe` [(read "192.0.2.0/24", " x")]
+        it "does not stop in the middle of an address" $ do
+            (reads "192.0.2.1a" :: [(IPv4, String)]) `shouldBe` []
+            (reads "1:2:3:4:5:6:7:8:9" :: [(IPv6, String)]) `shouldBe` []
 
 to_str_ipv4 :: AddrRange IPv4 -> Bool
 to_str_ipv4 a = readMay (show a) == Just a

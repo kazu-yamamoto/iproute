@@ -520,10 +520,10 @@ octet =
          in if n' <= 255 then f n' else Nothing
 
 ip4 :: Parser IPv4
-ip4 = skipSpaces >> toIPv4 <$> ip4' True
+ip4 = skipSpaces >> toIPv4 <$> ip4'
 
-ip4' :: Bool -> Parser [Int]
-ip4' checkTermination = do
+ip4' :: Parser [Int]
+ip4' = do
     a0 <- octet
     _ <- char '.'
     a1 <- octet
@@ -531,18 +531,18 @@ ip4' checkTermination = do
     a2 <- octet
     _ <- char '.'
     a3 <- octet
-    let as = [a0, a1, a2, a3]
-    when checkTermination $
-        skipSpaces >> termination
-    return as
+    boundary
+    return [a0, a1, a2, a3]
 
 skipSpaces :: Parser ()
 skipSpaces = void $ many (char ' ')
 
-termination :: Parser ()
-termination = P $ \str -> case str of
-    [] -> (Just (), "")
-    _ -> (Nothing, str)
+-- | Succeeds without consuming input if the address cannot continue here,
+--   so that 'readsPrec' can return the rest of the input.
+boundary :: Parser ()
+boundary = P $ \str -> case str of
+    c : _ | isHexDigit c || c == '.' || c == ':' -> (Nothing, str)
+    _ -> (Just (), str)
 
 ----------------------------------------------------------------
 --
@@ -574,42 +574,44 @@ format bs1 bs2 = do
     return $ bs1 ++ spring ++ bs2
 
 ip6 :: Parser IPv6
-ip6 = ip6' True
-
-ip6' :: Bool -> Parser IPv6
-ip6' checkTermination = skipSpaces >> toIPv6 <$> ip6arr
+ip6 = skipSpaces >> toIPv6 <$> ip6arr
   where
+    -- appar's <|> does not backtrack, so each branch is wrapped in try.
     ip6arr =
-        ip4Embedded' checkTermination
-            <|> do
-                colon2
-                bs <- option [] hexcolon
-                format [] bs
+        ip4Embedded
+            <|> try
+                ( do
+                    colon2
+                    bs <- option [] hexcolon
+                    boundary
+                    format [] bs
+                )
             <|> try
                 ( do
                     rs <- hexcolon
+                    boundary
                     check rs
                     return rs
                 )
-            <|> do
-                bs1 <- hexcolon2
-                bs2 <- option [] hexcolon
-                format bs1 bs2
+            <|> try
+                ( do
+                    bs1 <- hexcolon2
+                    bs2 <- option [] hexcolon
+                    boundary
+                    format bs1 bs2
+                )
       where
         hexcolon = hex `sepBy1` char ':'
         hexcolon2 = manyTill (hex <* char ':') (char ':')
         check bs = when (length bs /= 8) (fail "IPv6 address4")
 
 ip4Embedded :: Parser [Int]
-ip4Embedded = ip4Embedded' True
-
-ip4Embedded' :: Bool -> Parser [Int]
-ip4Embedded' checkTermination =
+ip4Embedded =
     try
         ( do
             colon2
             bs <- beforeEmbedded
-            embedded <- ip4' checkTermination
+            embedded <- ip4'
             format [] (bs ++ ip4ToIp6 embedded)
         )
         -- matches 2001:db8::192.0.2.1
@@ -617,14 +619,14 @@ ip4Embedded' checkTermination =
             ( do
                 bs1 <- manyTill (try $ hex <* char ':') (char ':')
                 bs2 <- option [] beforeEmbedded
-                embedded <- ip4' checkTermination
+                embedded <- ip4'
                 format bs1 (bs2 ++ ip4ToIp6 embedded)
             )
         -- matches 2001:db8:11e:c00:aa:bb:192.0.2.1
         <|> try
             ( do
                 bs <- beforeEmbedded
-                embedded <- ip4' checkTermination
+                embedded <- ip4'
                 let rs = bs ++ ip4ToIp6 embedded
                 check rs
                 return rs

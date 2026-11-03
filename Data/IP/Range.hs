@@ -118,7 +118,7 @@ maskLen maxLen = do
 ip4range :: Parser (AddrRange IPv4)
 ip4range = do
     skipSpaces
-    ip <- toIPv4 <$> ip4' False
+    ip <- toIPv4 <$> ip4'
     len <- maskLen 32
     let msk = maskIPv4 len
         adr = ip `maskedIPv4` msk
@@ -129,7 +129,7 @@ IP4 a `maskedIPv4` IP4 m = IP4 (a .&. m)
 
 ip6range :: Parser (AddrRange IPv6)
 ip6range = do
-    ip <- ip6' False
+    ip <- ip6
     len <- maskLen 128
     let msk = maskIPv6 len
         adr = ip `maskedIPv6` msk
