@@ -333,13 +333,9 @@ fromList = L.foldl' (\s (k, v) -> insert k v s) empty
 
 -- |
 --   The 'toList' function creates a list of a pair of 'AddrRange' and
---   value from an IP routing table.
+--   value from an IP routing table. The list is sorted by 'AddrRange'.
 toList :: Routable k => IPRTable k a -> [(AddrRange k, a)]
-toList = foldt toL []
-  where
-    toL Nil xs = xs
-    toL (Node _ _ Nothing _ _) xs = xs
-    toL (Node k _ (Just a) _ _) xs = (k, a) : xs
+toList = foldrWithKey (\k a xs -> (k, a) : xs) []
 
 ----------------------------------------------------------------
 
@@ -348,7 +344,7 @@ foldt _ v Nil = v
 foldt func v rt@(Node _ _ _ l r) = foldt func (foldt func (func rt v) l) r
 
 -- | /O(n)/. Fold the keys and values in the IPRTable using the given
---   left-associative binary operator.
+--   left-associative binary operator, in the order of 'AddrRange'.
 --   This function is equivalent to Data.Map.foldlWithKey with necessary to
 --   IPRTable changes.
 --   Since: 1.7.5
@@ -357,11 +353,11 @@ foldlWithKey f zr = go zr
   where
     go z Nil = z
     go z (Node _ _ Nothing l r) = go (go z l) r
-    go z (Node n _ (Just v) l r) = go (f (go z l) n v) r
+    go z (Node n _ (Just v) l r) = go (go (f z n v) l) r
 {-# INLINE foldlWithKey #-}
 
 -- | /O(n)/. Fold the keys and values in the IPRTable using the given
---   right-associative binary operator.
+--   right-associative binary operator, in the order of 'AddrRange'.
 --   This function is equivalent to Data.Map.foldrWithKey with necessary to
 --   IPRTable changes.
 --   Since: 1.7.5
@@ -370,5 +366,5 @@ foldrWithKey f zr = go zr
   where
     go z Nil = z
     go z (Node _ _ Nothing l r) = go (go z r) l
-    go z (Node n _ (Just v) l r) = go (f n v (go z r)) l
+    go z (Node n _ (Just v) l r) = f n v (go (go z r) l)
 {-# INLINE foldrWithKey #-}

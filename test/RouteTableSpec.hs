@@ -76,7 +76,7 @@ sort_ip xs = fromList (zip xs xs) == fromList (zip xs' xs')
     xs' = sort xs
 
 fromto_ip :: (Routable a, Ord a) => [AddrRange a] -> Bool
-fromto_ip xs = nub (sort xs) == nub (sort ys)
+fromto_ip xs = nub (sort xs) == ys
   where
     ys = map fst . toList . fromList $ zip xs xs
 
@@ -102,6 +102,7 @@ prop_foldl n ys =
          in Foldable.foldl (+) n m == List.foldr ((+) . snd) n xs
                 && Foldable.foldl (flip (:)) [] m == reverse (List.map snd (List.sort xs))
                 && foldlWithKey (\b _ a -> a + b) n m == List.foldr ((+) . snd) n xs
+                && foldlWithKey (\b k a -> (k, a) : b) [] m == reverse (List.sort xs)
 
 prop_foldr :: Int -> [(AddrRange IPv4, Int)] -> Property
 prop_foldr n ys =
@@ -111,6 +112,7 @@ prop_foldr n ys =
          in Foldable.foldr (+) n m == List.foldr ((+) . snd) n xs
                 && Foldable.foldr (:) [] m == List.map snd (List.sortBy (compare `on` fst) xs)
                 && foldrWithKey (\_ a b -> a + b) n m == List.foldr ((+) . snd) n xs
+                && foldrWithKey (\k a b -> (k, a) : b) [] m == List.sort xs
 
 prop_monoid :: [(AddrRange IPv4, ())] -> [(AddrRange IPv4, ())] -> Property
 prop_monoid xs ys =
