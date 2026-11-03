@@ -177,17 +177,19 @@ instance Enum IP where
     enumFrom (IPv4 ip) = IPv4 <$> enumFrom ip
     enumFrom (IPv6 ip) = IPv6 <$> enumFrom ip
 
+    -- Mixed families are enumerated as IPv6, as in Eq and Ord.
     enumFromTo (IPv4 ip) (IPv4 ip') = IPv4 <$> enumFromTo ip ip'
-    enumFromTo (IPv6 ip) (IPv6 ip') = IPv6 <$> enumFromTo ip ip'
-    enumFromTo _ _ = error "enumFromTo: Incompatible IP families"
+    enumFromTo ip ip' = IPv6 <$> enumFromTo (toV6 ip) (toV6 ip')
 
     enumFromThen (IPv4 ip) (IPv4 ip') = IPv4 <$> enumFromThen ip ip'
-    enumFromThen (IPv6 ip) (IPv6 ip') = IPv6 <$> enumFromThen ip ip'
-    enumFromThen _ _ = error "enumFromThen: Incompatible IP families"
+    enumFromThen ip ip' = IPv6 <$> enumFromThen (toV6 ip) (toV6 ip')
 
     enumFromThenTo (IPv4 ip) (IPv4 inc) (IPv4 fin) = IPv4 <$> enumFromThenTo ip inc fin
-    enumFromThenTo (IPv6 ip) (IPv6 inc) (IPv6 fin) = IPv6 <$> enumFromThenTo ip inc fin
-    enumFromThenTo _ _ _ = error "enumFromThenTo: Incompatible IP families"
+    enumFromThenTo ip inc fin = IPv6 <$> enumFromThenTo (toV6 ip) (toV6 inc) (toV6 fin)
+
+toV6 :: IP -> IPv6
+toV6 (IPv4 ip) = ipv4ToIPv6 ip
+toV6 (IPv6 ip) = ip
 
 ip6ToInteger :: IPv6 -> Integer
 ip6ToInteger (IP6 (a, b, c, d)) =

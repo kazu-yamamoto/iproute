@@ -110,6 +110,14 @@ spec = do
             let r = makeAddrRange (a :: IPv4) n in readMay (show r) == Just r
         prop "makes a valid IPv6 range" $ \a n ->
             let r = makeAddrRange (a :: IPv6) n in readMay (show r) == Just r
+    describe "IPv4-mapped IPv6" $ do
+        prop "IPRange compares like IP" $ \x y ->
+            let r4 = IPv4Range x
+                r6 = IPv6Range (ipv4RangeToIPv6 y)
+             in (r4 == r6) == (x == y) && compare r4 r6 == compare x y
+        it "enumerates mixed families as IPv6" $ do
+            [IPv4 "192.0.2.1" .. IPv6 "::ffff:192.0.2.2"]
+                `shouldBe` [IPv6 "::ffff:192.0.2.1", IPv6 "::ffff:192.0.2.2"]
     describe "enum" $ do
         it "stops at maxBound" $ do
             [maxBound ..] `shouldBe` [maxBound :: IPv4]

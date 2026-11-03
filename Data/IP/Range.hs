@@ -25,10 +25,30 @@ import Text.Appar.String
 -- True
 -- >>> (read "2001:db8:00:00:00:00:00:01/48" :: IPRange) == IPv6Range (read "2001:db8:00:00:00:00:00:01/48" :: AddrRange IPv6)
 -- True
+-- >>> (read "192.0.2.0/24" :: IPRange) == (read "::ffff:192.0.2.0/120" :: IPRange)
+-- True
 data IPRange
     = IPv4Range {ipv4range :: AddrRange IPv4}
     | IPv6Range {ipv6range :: AddrRange IPv6}
-    deriving (Eq, Ord, Data, Generic)
+    deriving (Data, Generic)
+
+-- | Like 'IP', an IPv4 range is equal to its IPv4-mapped IPv6 range.
+instance Eq IPRange where
+    IPv4Range r1 == IPv4Range r2 = r1 == r2
+    IPv6Range r1 == IPv6Range r2 = r1 == r2
+    IPv4Range r1 == IPv6Range r2 = mapRange r1 == r2
+    IPv6Range r1 == IPv4Range r2 = r1 == mapRange r2
+
+instance Ord IPRange where
+    IPv4Range r1 `compare` IPv4Range r2 = r1 `compare` r2
+    IPv6Range r1 `compare` IPv6Range r2 = r1 `compare` r2
+    IPv4Range r1 `compare` IPv6Range r2 = mapRange r1 `compare` r2
+    IPv6Range r1 `compare` IPv4Range r2 = r1 `compare` mapRange r2
+
+mapRange :: AddrRange IPv4 -> AddrRange IPv6
+mapRange (AddrRange a _ len) = AddrRange (ipv4ToIPv6 a) (maskIPv6 len') len'
+  where
+    len' = len + 96
 
 ----------------------------------------------------------------
 --
